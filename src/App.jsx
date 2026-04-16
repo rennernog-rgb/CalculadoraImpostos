@@ -49,12 +49,13 @@ const estados = [
   { sigla: 'TO', nome: 'Tocantins' },
 ]
 
+// Alíquotas internas atualizadas 2026
 const aliquotasInternas = {
-  AC: 0.17, AL: 0.18, AP: 0.18, AM: 0.18, BA: 0.19, CE: 0.18,
-  DF: 0.18, ES: 0.17, GO: 0.17, MA: 0.18, MT: 0.17, MS: 0.17,
-  MG: 0.18, PA: 0.17, PB: 0.18, PR: 0.19, PE: 0.18, PI: 0.18,
-  RJ: 0.20, RN: 0.18, RS: 0.17, RO: 0.17, RR: 0.17, SC: 0.17,
-  SP: 0.18, SE: 0.18, TO: 0.18,
+  AC: 0.19, AL: 0.19, AP: 0.18, AM: 0.20, BA: 0.205, CE: 0.20,
+  DF: 0.20, ES: 0.17, GO: 0.19, MA: 0.22, MT: 0.17,  MS: 0.17,
+  MG: 0.18, PA: 0.19, PB: 0.20, PR: 0.195,PE: 0.205, PI: 0.21,
+  RJ: 0.22, RN: 0.18, RS: 0.17, RO: 0.175,RR: 0.17,  SC: 0.17,
+  SP: 0.18, SE: 0.19, TO: 0.20,
 }
 
 const sulSudeste       = ['SP', 'RJ', 'MG', 'PR', 'SC', 'RS']
@@ -70,56 +71,68 @@ function getAliquotaICMS(origem, destino) {
 // ─── FUNÇÕES DE CÁLCULO ──────────────────────────────────────────────────────
 
 function calcularAtual(inputs) {
-  const { tipoMinerio, valorCompra, valorVenda, valorFrete, modalidadeFrete, estadoOrigem, estadoDestino } = inputs
+  const { valorCompra, valorVenda, valorFrete, modalidadeFrete,
+          estadoOrigem, estadoDestino, estadoFornecedor } = inputs
   const compra  = parseFloat(valorCompra) || 0
   const venda   = parseFloat(valorVenda)  || 0
   const frete   = parseFloat(valorFrete)  || 0
   const isCIF   = modalidadeFrete === 'CIF'
-  const minerio = minerios.find(m => m.id === tipoMinerio) ?? minerios[0]
 
-  const baseICMS      = isCIF ? venda + frete : venda
-  const aliqICMS      = getAliquotaICMS(estadoOrigem, estadoDestino)
-  const icms          = baseICMS * aliqICMS
+  // ICMS da venda (débito)
+  const baseICMS    = isCIF ? venda + frete : venda
+  const aliqICMS    = getAliquotaICMS(estadoOrigem, estadoDestino)
+  const icmsDebito  = baseICMS * aliqICMS
+
+  // ICMS da compra (crédito — aproveitamento)
+  const aliqICMSCompra = getAliquotaICMS(estadoFornecedor, estadoOrigem)
+  const icmsCredito    = compra * aliqICMSCompra
+
+  // ICMS líquido a recolher (nunca negativo — saldo credor fica para próximo período)
+  const icmsLiquido = Math.max(0, icmsDebito - icmsCredito)
+
   const pisCofins     = venda * 0.0365
   const irpjCsll      = venda * 0.0228
-  const trifon        = venda * 0.01
-  const cfemInformativo = compra * minerio.cfem
-  const totalImpostos = icms + pisCofins + irpjCsll + trifon
+  const totalImpostos = icmsLiquido + pisCofins + irpjCsll
   const custoTotal    = isCIF ? compra + frete : compra
   const lucroBruto    = venda - custoTotal
   const lucroLiquido  = lucroBruto - totalImpostos
   const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
 
-  return { baseICMS, aliqICMS, icms, pisCofins, irpjCsll, trifon,
-           cfemInformativo, cfemAliq: minerio.cfem, totalImpostos,
+  return { baseICMS, aliqICMS, aliqICMSCompra, icmsDebito, icmsCredito, icmsLiquido,
+           pisCofins, irpjCsll, totalImpostos,
            custoTotal, lucroBruto, lucroLiquido, margemLiquida, isCIF, frete }
 }
 
 function calcular2027(inputs) {
-  const { tipoMinerio, valorCompra, valorVenda, valorFrete, modalidadeFrete, estadoOrigem, estadoDestino } = inputs
+  const { valorCompra, valorVenda, valorFrete, modalidadeFrete,
+          estadoOrigem, estadoDestino, estadoFornecedor } = inputs
   const compra  = parseFloat(valorCompra) || 0
   const venda   = parseFloat(valorVenda)  || 0
   const frete   = parseFloat(valorFrete)  || 0
   const isCIF   = modalidadeFrete === 'CIF'
-  const minerio = minerios.find(m => m.id === tipoMinerio) ?? minerios[0]
 
-  const pisCofins     = 0
-  const cbs           = venda * 0.088
-  const ibs           = venda * 0.001
-  const baseICMS      = isCIF ? venda + frete : venda
-  const aliqICMS      = getAliquotaICMS(estadoOrigem, estadoDestino)
-  const icms          = baseICMS * aliqICMS
+  // CBS e IBS (não-cumulativos — crédito simplificado)
+  const cbs = venda * 0.088
+  const ibs = venda * 0.001
+
+  // ICMS ainda vigente em 2027 com aproveitamento
+  const baseICMS       = isCIF ? venda + frete : venda
+  const aliqICMS       = getAliquotaICMS(estadoOrigem, estadoDestino)
+  const icmsDebito     = baseICMS * aliqICMS
+  const aliqICMSCompra = getAliquotaICMS(estadoFornecedor, estadoOrigem)
+  const icmsCredito    = compra * aliqICMSCompra
+  const icmsLiquido    = Math.max(0, icmsDebito - icmsCredito)
+
   const irpjCsll      = venda * 0.0228
-  const trifon        = venda * 0.01
-  const cfemInformativo = compra * minerio.cfem
-  const totalImpostos = cbs + ibs + icms + irpjCsll + trifon
+  const pisCofins     = 0
+  const totalImpostos = cbs + ibs + icmsLiquido + irpjCsll
   const custoTotal    = isCIF ? compra + frete : compra
   const lucroBruto    = venda - custoTotal
   const lucroLiquido  = lucroBruto - totalImpostos
   const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
 
-  return { baseICMS, aliqICMS, icms, pisCofins, cbs, ibs, irpjCsll, trifon,
-           cfemInformativo, cfemAliq: minerio.cfem, totalImpostos,
+  return { baseICMS, aliqICMS, aliqICMSCompra, icmsDebito, icmsCredito, icmsLiquido,
+           cbs, ibs, pisCofins, irpjCsll, totalImpostos,
            custoTotal, lucroBruto, lucroLiquido, margemLiquida, isCIF, frete }
 }
 
@@ -167,21 +180,6 @@ function CardImposto({ nome, aliq, valor, tooltip, destaque = false }) {
   )
 }
 
-function CardCfem({ valor, aliq }) {
-  return (
-    <div className="rounded-lg px-4 py-3 border border-zinc-700/30 bg-zinc-900/50 flex items-center justify-between">
-      <div className="flex items-center gap-1.5">
-        <span className="text-sm text-zinc-500">CFEM (informativo)</span>
-        <Tooltip texto="Compensação Financeira pela Exploração Mineral. Pago pela mineradora extratora. Como revendedora, este custo já está embutido no seu preço de compra. Exibido apenas para referência." />
-        <span className="ml-1 text-xs text-zinc-600 font-mono">{pct(aliq * 100)}</span>
-      </div>
-      <div className="text-right">
-        <span className="text-zinc-500 font-display text-base tracking-wide">{fmt(valor)}</span>
-        <span className="block text-xs text-zinc-600">não somado</span>
-      </div>
-    </div>
-  )
-}
 
 function LabelField({ children, label, tooltip }) {
   return (
@@ -309,14 +307,15 @@ function ComparativoRegimes({ atual, r2027, venda }) {
 // ─── ESTADO INICIAL ───────────────────────────────────────────────────────────
 
 const estadoInicial = {
-  tipoMinerio:     'ferro',
-  valorCompra:     '',
-  valorVenda:      '',
-  valorFrete:      '',
-  modalidadeFrete: 'CIF',
-  estadoOrigem:    'SP',
-  estadoDestino:   'RJ',
-  regime:          'atual',
+  tipoMinerio:      'ferro',
+  valorCompra:      '',
+  valorVenda:       '',
+  valorFrete:       '',
+  modalidadeFrete:  'CIF',
+  estadoFornecedor: 'MG',
+  estadoOrigem:     'SP',
+  estadoDestino:    'RJ',
+  regime:           'atual',
 }
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
@@ -364,17 +363,17 @@ export default function App() {
       `  Custo Total     : ${fmt(r.custoTotal)}`,
       ``,
       `IMPOSTOS`,
-      `  ICMS (${pct(r.aliqICMS * 100)})     : ${fmt(r.icms)}`,
+      `  ICMS Débito  (${pct(r.aliqICMS * 100)} venda)  : ${fmt(r.icmsDebito)}`,
+      `  ICMS Crédito (${pct(r.aliqICMSCompra * 100)} compra) : − ${fmt(r.icmsCredito)}`,
+      `  ICMS a Recolher              : ${fmt(r.icmsLiquido)}`,
       ...(is2027
         ? [
             `  CBS (8,80%)          : ${fmt(resultado2027.cbs)}`,
             `  IBS (0,10%)          : ${fmt(resultado2027.ibs)}`,
-            `  PIS/COFINS           : R$ 0,00 (extintos)`,
+            `  PIS/COFINS           : R$ 0,00 (extintos em 2027)`,
           ]
         : [`  PIS+COFINS (3,65%)  : ${fmt(r.pisCofins)}`]),
-      `  IRPJ+CSLL (2,28%)    : ${fmt(r.irpjCsll)}`,
-      `  TRIFON (1,00%)       : ${fmt(r.trifon)}`,
-      `  CFEM (informativo)   : ${fmt(r.cfemInformativo)}`,
+      `  IRPJ+CSLL (2,28%)   : ${fmt(r.irpjCsll)}`,
       `  ─────────────────────────────────────`,
       `  TOTAL DE IMPOSTOS    : ${fmt(r.totalImpostos)}`,
       ``,
@@ -516,9 +515,19 @@ export default function App() {
           {/* Estados */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
             <h2 className="font-display text-xl tracking-widest text-zinc-300">ORIGEM & DESTINO</h2>
+
+            <LabelField label="Estado do Fornecedor (Compra)"
+              tooltip="Estado de onde você comprou o minério. Determina a alíquota de ICMS que gerou crédito na entrada, que será abatida do ICMS da venda.">
+              <select name="estadoFornecedor" value={form.estadoFornecedor} onChange={handleChange} className={selectCls}>
+                {estados.map(e => (
+                  <option key={e.sigla} value={e.sigla}>{e.sigla} — {e.nome}</option>
+                ))}
+              </select>
+            </LabelField>
+
             <div className="grid grid-cols-2 gap-3">
-              <LabelField label="Estado de Origem"
-                tooltip="Estado onde o minério é vendido (saída da NF).">
+              <LabelField label="Estado de Origem (Venda)"
+                tooltip="Estado de onde o minério sai na revenda (emissão da NF de saída).">
                 <select name="estadoOrigem" value={form.estadoOrigem} onChange={handleChange} className={selectCls}>
                   {estados.map(e => (
                     <option key={e.sigla} value={e.sigla}>{e.sigla} — {e.nome}</option>
@@ -535,14 +544,18 @@ export default function App() {
               </LabelField>
             </div>
 
-            {/* Tag ICMS */}
-            <div className="flex items-center justify-between rounded-lg bg-zinc-800/60 border border-zinc-700/40 px-3 py-2 text-xs">
-              <span className="text-zinc-400">
-                {form.estadoOrigem === form.estadoDestino ? 'Operação interna' : 'Operação interestadual'}
-              </span>
-              <span className="text-amber-400 font-mono font-semibold">
-                ICMS {pct(resultado.aliqICMS * 100)}
-              </span>
+            {/* Tags ICMS */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between rounded-lg bg-emerald-900/20 border border-emerald-800/40 px-3 py-2 text-xs">
+                <span className="text-zinc-400">Crédito ICMS compra ({form.estadoFornecedor}→{form.estadoOrigem})</span>
+                <span className="text-emerald-400 font-mono font-semibold">{pct(resultado.aliqICMSCompra * 100)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-zinc-800/60 border border-zinc-700/40 px-3 py-2 text-xs">
+                <span className="text-zinc-400">
+                  {form.estadoOrigem === form.estadoDestino ? 'Débito ICMS venda — operação interna' : 'Débito ICMS venda — operação interestadual'}
+                </span>
+                <span className="text-amber-400 font-mono font-semibold">{pct(resultado.aliqICMS * 100)}</span>
+              </div>
             </div>
           </div>
 
@@ -564,12 +577,29 @@ export default function App() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
             <h2 className="font-display text-xl tracking-widest text-zinc-300">IMPOSTOS INCIDENTES</h2>
 
-            <CardImposto
-              nome="ICMS"
-              aliq={pct(resultado.aliqICMS * 100)}
-              valor={resultado.icms}
-              tooltip={`Imposto sobre Circulação de Mercadorias. Alíquota ${pct(resultado.aliqICMS * 100)} para ${form.estadoOrigem}→${form.estadoDestino}. Base: ${fmt(resultado.baseICMS)} (${resultado.isCIF ? 'CIF: inclui frete' : 'FOB: apenas venda'}).`}
-            />
+            {/* ICMS com aproveitamento de crédito */}
+            <div className="rounded-lg border border-zinc-700/40 bg-zinc-800/60 overflow-hidden">
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-zinc-200">ICMS Débito</span>
+                  <Tooltip texto={`ICMS da venda. Alíquota ${pct(resultado.aliqICMS * 100)} para ${form.estadoOrigem}→${form.estadoDestino}. Base: ${fmt(resultado.baseICMS)} (${resultado.isCIF ? 'CIF: inclui frete' : 'FOB: apenas venda'}).`} />
+                  <span className="ml-1 text-xs text-zinc-500 font-mono">{pct(resultado.aliqICMS * 100)}</span>
+                </div>
+                <span className="font-display text-lg tracking-wide text-zinc-100">{fmt(resultado.icmsDebito)}</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between border-t border-zinc-700/40 bg-emerald-900/10">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-emerald-400">ICMS Crédito</span>
+                  <Tooltip texto={`Crédito de ICMS aproveitado na compra. Alíquota ${pct(resultado.aliqICMSCompra * 100)} sobre ${form.estadoFornecedor}→${form.estadoOrigem}. Abatido do ICMS da venda.`} />
+                  <span className="ml-1 text-xs text-emerald-600 font-mono">{pct(resultado.aliqICMSCompra * 100)}</span>
+                </div>
+                <span className="font-display text-lg tracking-wide text-emerald-400">− {fmt(resultado.icmsCredito)}</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between border-t border-zinc-700/40 bg-zinc-800">
+                <span className="text-sm font-semibold text-zinc-200">ICMS a Recolher</span>
+                <span className="font-display text-lg tracking-wide text-amber-400">{fmt(resultado.icmsLiquido)}</span>
+              </div>
+            </div>
 
             {is2027 ? (
               <>
@@ -584,7 +614,7 @@ export default function App() {
                   nome="IBS"
                   aliq="0,10%"
                   valor={resultado2027.ibs}
-                  tooltip="Imposto sobre Bens e Serviços. Substitui gradualmente o ICMS e ISS. Em 2027 está na fase inicial de transição com alíquota baixa (~0,1%). Extinção total do ICMS prevista para 2033."
+                  tooltip="Imposto sobre Bens e Serviços. Substitui gradualmente o ICMS e ISS. Em 2027 está na fase inicial de transição (~0,1%). Extinção total do ICMS prevista para 2033."
                   destaque
                 />
                 <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-zinc-800/40 border border-zinc-700/30 text-xs text-zinc-500">
@@ -605,19 +635,8 @@ export default function App() {
               nome="IRPJ + CSLL"
               aliq="2,28%"
               valor={resultado.irpjCsll}
-              tooltip="Imposto de Renda Pessoa Jurídica (base presumida 8% × alíquota 15% = 1,2%) + Contribuição Social sobre Lucro Líquido (base presumida 12% × alíquota 9% = 1,08%). Total: 2,28% sobre a receita bruta."
+              tooltip="Imposto de Renda Pessoa Jurídica (base presumida 8% × alíquota 15% = 1,2%) + CSLL (base presumida 12% × alíquota 9% = 1,08%). Total: 2,28% sobre a receita bruta."
             />
-
-            <CardImposto
-              nome="TRIFON"
-              aliq="1,00%"
-              valor={resultado.trifon}
-              tooltip="Taxa de Fiscalização de Recursos Minerais. Estimativa de 1% sobre o valor de venda para operações de revenda de minérios."
-            />
-
-            <div className="border-t border-zinc-800 pt-3 mt-2">
-              <CardCfem valor={resultado.cfemInformativo} aliq={resultado.cfemAliq} />
-            </div>
 
             {/* Total de impostos */}
             <div className="rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 flex items-center justify-between">
