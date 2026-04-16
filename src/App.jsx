@@ -258,56 +258,116 @@ function ComparativoRegimes({ atual, r2027, venda }) {
     },
   ]
 
+  // bar widths for visual comparison (capped at 100%)
+  const maxImp  = Math.max(atual.totalImpostos, r2027.totalImpostos, 0.01)
+  const maxLucro = Math.max(Math.abs(atual.lucroLiquido), Math.abs(r2027.lucroLiquido), 0.01)
+
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-      <h2 className="font-display text-xl tracking-widest text-zinc-300 mb-4">
-        COMPARATIVO 2026 vs 2027
-      </h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-800">
-              <th className="text-left text-xs text-zinc-500 pb-2 font-medium">Indicador</th>
-              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">2026 (Atual)</th>
-              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">2027 (Reforma)</th>
-              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">Variação</th>
-            </tr>
-          </thead>
-          <tbody>
-            {linhas.map((l) => (
-              <tr key={l.label} className="border-b border-zinc-800/60 last:border-0">
-                <td className="py-3 text-zinc-400">{l.label}</td>
-                {l.isMargem ? (
-                  <>
-                    <td className="py-3 text-right font-mono text-zinc-200">
-                      {l.margem2026.toFixed(2).replace('.', ',')}%
-                    </td>
-                    <td className="py-3 text-right font-mono text-zinc-200">
-                      {l.margem2027.toFixed(2).replace('.', ',')}%
-                    </td>
-                    <td className="py-3 text-right">
-                      <Seta diff={l.margem2027 - l.margem2026} pct={Math.abs(l.margem2027 - l.margem2026)} inverso={false} />
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className={`py-3 text-right font-mono ${l.v2026 < 0 ? 'text-red-400' : 'text-zinc-200'}`}>
-                      {fmt(l.v2026)}
-                    </td>
-                    <td className={`py-3 text-right font-mono ${l.v2027 < 0 ? 'text-red-400' : 'text-zinc-200'}`}>
-                      {fmt(l.v2027)}
-                    </td>
-                    <td className="py-3 text-right">
-                      {venda > 0
-                        ? <Seta diff={l.diff} pct={Math.abs(l.pctDiff)} inverso={l.inverso} />
-                        : <span className="text-zinc-600 text-xs">—</span>}
-                    </td>
-                  </>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="glass rounded-2xl p-5 space-y-5" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+          style={{color: 'rgba(245,158,11,0.9)'}}>
+          <TrendingUp size={15} />
+          Comparativo 2026 vs 2027
+        </h2>
+        <div className="flex items-center gap-3 text-xs" style={{color: 'rgba(113,113,122,0.8)'}}>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{background: 'rgba(161,161,170,0.4)'}} />
+            2026
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{background: 'rgba(245,158,11,0.7)'}} />
+            2027
+          </span>
+        </div>
+      </div>
+
+      {/* Cards de métricas */}
+      <div className="space-y-3">
+
+        {/* Total de Impostos */}
+        <div className="rounded-xl p-4 space-y-3" style={{background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)'}}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{color: 'rgba(161,161,170,0.7)'}}>Total de Impostos</span>
+            {venda > 0 && (
+              <Seta diff={diffImpostos} pct={Math.abs(pctDiffImp)} inverso={true} />
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs mb-1.5" style={{color: 'rgba(113,113,122,0.8)'}}>2026 (Atual)</p>
+              <p className={`font-mono font-semibold text-base ${atual.totalImpostos < 0 ? 'text-red-400' : 'text-zinc-200'}`}>
+                {fmt(atual.totalImpostos)}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.06)'}}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{width: `${Math.min((atual.totalImpostos / maxImp) * 100, 100)}%`, background: 'rgba(161,161,170,0.5)'}} />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs mb-1.5" style={{color: 'rgba(113,113,122,0.8)'}}>2027 (Reforma)</p>
+              <p className={`font-mono font-semibold text-base ${r2027.totalImpostos < 0 ? 'text-red-400' : 'text-amber-300'}`}>
+                {fmt(r2027.totalImpostos)}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.06)'}}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{width: `${Math.min((r2027.totalImpostos / maxImp) * 100, 100)}%`, background: 'rgba(245,158,11,0.7)'}} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lucro Líquido */}
+        <div className="rounded-xl p-4 space-y-3" style={{background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)'}}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{color: 'rgba(161,161,170,0.7)'}}>Lucro Líquido</span>
+            {venda > 0 && (
+              <Seta diff={diffLucro} pct={Math.abs(pctDiffLucro)} inverso={false} />
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs mb-1.5" style={{color: 'rgba(113,113,122,0.8)'}}>2026 (Atual)</p>
+              <p className={`font-mono font-semibold text-base ${atual.lucroLiquido < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                {fmt(atual.lucroLiquido)}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.06)'}}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{width: `${Math.min((Math.abs(atual.lucroLiquido) / maxLucro) * 100, 100)}%`,
+                    background: atual.lucroLiquido < 0 ? 'rgba(248,113,113,0.6)' : 'rgba(52,211,153,0.6)'}} />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs mb-1.5" style={{color: 'rgba(113,113,122,0.8)'}}>2027 (Reforma)</p>
+              <p className={`font-mono font-semibold text-base ${r2027.lucroLiquido < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                {fmt(r2027.lucroLiquido)}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{background: 'rgba(255,255,255,0.06)'}}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{width: `${Math.min((Math.abs(r2027.lucroLiquido) / maxLucro) * 100, 100)}%`,
+                    background: r2027.lucroLiquido < 0 ? 'rgba(248,113,113,0.6)' : 'rgba(245,158,11,0.7)'}} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Margem Líquida */}
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between"
+          style={{background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)'}}>
+          <span className="text-xs font-semibold uppercase tracking-widest" style={{color: 'rgba(161,161,170,0.7)'}}>Margem Líquida</span>
+          <div className="flex items-center gap-4 text-sm font-mono font-semibold">
+            <span className="text-zinc-300">{atual.margemLiquida.toFixed(2).replace('.', ',')}%</span>
+            <span style={{color: 'rgba(113,113,122,0.5)'}}>→</span>
+            <span className="text-amber-300">{r2027.margemLiquida.toFixed(2).replace('.', ',')}%</span>
+            {venda > 0 && (
+              <Seta diff={r2027.margemLiquida - atual.margemLiquida}
+                pct={Math.abs(r2027.margemLiquida - atual.margemLiquida)} inverso={false} />
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   )
