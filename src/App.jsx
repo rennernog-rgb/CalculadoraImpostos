@@ -165,20 +165,24 @@ function Tooltip({ texto }) {
 
 function CardImposto({ nome, aliq, valor, tooltip, destaque = false }) {
   return (
-    <div className={`rounded-lg px-4 py-3 flex items-center justify-between border transition-all
-      ${destaque
-        ? 'bg-amber-900/20 border-amber-700/40'
-        : 'bg-zinc-800/60 border-zinc-700/40 hover:border-zinc-600/60'}`}>
-      <div className="flex items-center gap-1.5">
+    <div className={`rounded-xl px-4 py-3 flex items-center justify-between transition-all card-lift overflow-hidden relative ${
+      destaque ? '' : ''}`}
+      style={destaque
+        ? {background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.22)'}
+        : {background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)'}}>
+      {/* colored left accent bar */}
+      <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl"
+        style={{background: destaque ? 'linear-gradient(180deg,#f59e0b,#d97706)' : 'rgba(255,255,255,0.1)'}} />
+      <div className="flex items-center gap-1.5 pl-1">
         <span className={`text-sm font-medium ${destaque ? 'text-amber-300' : 'text-zinc-200'}`}>
           {nome}
         </span>
         {tooltip && <Tooltip texto={tooltip} />}
         {aliq && (
-          <span className="ml-1 text-xs text-zinc-500 font-mono">{aliq}</span>
+          <span className={`ml-1 text-xs font-mono ${destaque ? 'text-amber-500' : 'text-zinc-500'}`}>{aliq}</span>
         )}
       </div>
-      <span className={`font-display text-lg tracking-wide ${destaque ? 'text-amber-400' : 'text-zinc-100'}`}>
+      <span className={`font-mono text-base font-semibold tracking-wide ${destaque ? 'text-amber-400' : 'text-zinc-100'}`}>
         {fmt(valor)}
       </span>
     </div>
@@ -722,59 +726,63 @@ export default function App() {
         {/* ════════════════════════════════════════
             COLUNA DIREITA — RESULTADOS
             ════════════════════════════════════════ */}
-        <section className="space-y-4 animate-fadeSlide" key={form.regime}>
+        <section className="space-y-4 anim-up-2" key={form.regime}>
 
           {/* Detalhamento dos impostos */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
-            <h2 className="font-display text-xl tracking-widest text-zinc-300">IMPOSTOS INCIDENTES</h2>
+          <div className="glass rounded-2xl p-5 space-y-3" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+              style={{color: 'rgba(245,158,11,0.9)'}}>
+              <BarChart2 size={15} />
+              Impostos Incidentes
+            </h2>
 
             {/* ICMS com aproveitamento de crédito */}
-            <div className="rounded-lg border border-zinc-700/40 bg-zinc-800/60 overflow-hidden">
-              <div className="px-4 py-2.5 flex items-center justify-between">
+            <div className="rounded-xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+              <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(255,255,255,0.03)'}}>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium text-zinc-200">ICMS Débito</span>
                   <Tooltip texto={`ICMS da venda. Alíquota ${pct(resultado.aliqICMS * 100)} para ${form.estadoOrigem}→${form.estadoDestino}. Base: ${fmt(resultado.baseICMS)} (${resultado.isCIF ? 'CIF: inclui frete' : 'FOB: apenas venda'}).`} />
-                  <span className="ml-1 text-xs text-zinc-500 font-mono">{pct(resultado.aliqICMS * 100)}</span>
+                  <span className="ml-1 text-xs font-mono text-zinc-500">{pct(resultado.aliqICMS * 100)}</span>
                 </div>
-                <span className="font-display text-lg tracking-wide text-zinc-100">{fmt(resultado.icmsDebito)}</span>
+                <span className="font-mono text-base font-semibold text-zinc-100">{fmt(resultado.icmsDebito)}</span>
               </div>
-              <div className="px-4 py-2.5 flex items-center justify-between border-t border-zinc-700/40 bg-emerald-900/10">
+              <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(52,211,153,0.06)', borderTop: '1px solid rgba(52,211,153,0.12)'}}>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium text-emerald-400">ICMS Crédito</span>
                   <Tooltip texto={`Crédito de ICMS aproveitado na compra. Alíquota ${pct(resultado.aliqICMSCompra * 100)} sobre ${form.estadoFornecedor}→${form.estadoOrigem}. Abatido do ICMS da venda.`} />
-                  <span className="ml-1 text-xs text-emerald-600 font-mono">{pct(resultado.aliqICMSCompra * 100)}</span>
+                  <span className="ml-1 text-xs font-mono text-emerald-600">{pct(resultado.aliqICMSCompra * 100)}</span>
                 </div>
-                <span className="font-display text-lg tracking-wide text-emerald-400">− {fmt(resultado.icmsCredito)}</span>
+                <span className="font-mono text-base font-semibold text-emerald-400">− {fmt(resultado.icmsCredito)}</span>
               </div>
-              <div className="px-4 py-2.5 flex items-center justify-between border-t border-zinc-700/40 bg-zinc-800">
+              <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(245,158,11,0.06)', borderTop: '1px solid rgba(245,158,11,0.15)'}}>
                 <span className="text-sm font-semibold text-zinc-200">ICMS a Recolher</span>
-                <span className="font-display text-lg tracking-wide text-amber-400">{fmt(resultado.icmsLiquido)}</span>
+                <span className="font-mono text-base font-bold text-amber-400">{fmt(resultado.icmsLiquido)}</span>
               </div>
             </div>
 
             {is2027 ? (
               <>
                 {/* CBS com crédito da compra */}
-                <div className="rounded-lg border border-amber-700/30 bg-amber-900/10 overflow-hidden">
-                  <div className="px-4 py-2.5 flex items-center justify-between">
+                <div className="rounded-xl overflow-hidden" style={{border: '1px solid rgba(245,158,11,0.18)'}}>
+                  <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(245,158,11,0.04)'}}>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-amber-300">CBS Bruta</span>
                       <Tooltip texto="CBS (Contribuição sobre Bens e Serviços) devida sobre o valor de venda. Alíquota estimada: 8,8%. Substitui o PIS/COFINS a partir de 2027." />
-                      <span className="ml-1 text-xs text-amber-600 font-mono">8,80%</span>
+                      <span className="ml-1 text-xs font-mono text-amber-600">8,80%</span>
                     </div>
-                    <span className="font-display text-lg tracking-wide text-amber-200">{fmt(resultado2027.cbsBruta)}</span>
+                    <span className="font-mono text-base font-semibold text-amber-200">{fmt(resultado2027.cbsBruta)}</span>
                   </div>
-                  <div className="px-4 py-2.5 flex items-center justify-between border-t border-amber-800/30 bg-emerald-900/10">
+                  <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(52,211,153,0.06)', borderTop: '1px solid rgba(52,211,153,0.12)'}}>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-emerald-400">CBS Crédito</span>
                       <Tooltip texto="Sua revendedora aproveita o crédito de CBS pago pelo fornecedor na etapa anterior da cadeia. Apenas a diferença é recolhida." />
-                      <span className="ml-1 text-xs text-emerald-600 font-mono">8,80%</span>
+                      <span className="ml-1 text-xs font-mono text-emerald-600">8,80%</span>
                     </div>
-                    <span className="font-display text-lg tracking-wide text-emerald-400">− {fmt(resultado2027.cbsCredito)}</span>
+                    <span className="font-mono text-base font-semibold text-emerald-400">− {fmt(resultado2027.cbsCredito)}</span>
                   </div>
-                  <div className="px-4 py-2.5 flex items-center justify-between border-t border-amber-800/30 bg-amber-900/20">
+                  <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(245,158,11,0.09)', borderTop: '1px solid rgba(245,158,11,0.2)'}}>
                     <span className="text-sm font-semibold text-amber-300">CBS a Recolher</span>
-                    <span className="font-display text-lg tracking-wide text-amber-400">{fmt(resultado2027.cbsLiquida)}</span>
+                    <span className="font-mono text-base font-bold text-amber-400">{fmt(resultado2027.cbsLiquida)}</span>
                   </div>
                 </div>
                 <CardImposto
@@ -784,7 +792,8 @@ export default function App() {
                   tooltip="Imposto sobre Bens e Serviços. Substitui gradualmente o ICMS e ISS. Em 2027 está na fase inicial de transição (~0,1%). Extinção total do ICMS prevista para 2033."
                   destaque
                 />
-                <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-zinc-800/40 border border-zinc-700/30 text-xs text-zinc-500">
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs"
+                  style={{background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(113,113,122,0.9)'}}>
                   <Info size={12} />
                   PIS/COFINS extintos em 2027 — substituídos pela CBS
                 </div>
@@ -806,88 +815,73 @@ export default function App() {
             />
 
             {/* Total de impostos */}
-            <div className="rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 flex items-center justify-between">
+            <div className="rounded-xl px-4 py-4 flex items-center justify-between"
+              style={{background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05))', border: '1px solid rgba(245,158,11,0.25)'}}>
               <div>
                 <span className="text-sm font-semibold text-zinc-200">Total de Impostos</span>
                 {venda > 0 && (
-                  <span className="block text-xs text-zinc-500">
+                  <span className="block text-xs mt-0.5" style={{color: 'rgba(161,161,170,0.7)'}}>
                     {pct((resultado.totalImpostos / venda) * 100)} sobre a venda
                   </span>
                 )}
               </div>
-              <span className="font-display text-2xl tracking-wide text-amber-400">
+              <span className="font-mono text-2xl font-bold text-amber-400">
                 {fmt(resultado.totalImpostos)}
               </span>
             </div>
           </div>
 
           {/* Resumo financeiro */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
-            <h2 className="font-display text-xl tracking-widest text-zinc-300">RESUMO FINANCEIRO</h2>
+          <div className="glass rounded-2xl p-5 space-y-3 anim-up-3" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+              style={{color: 'rgba(245,158,11,0.9)'}}>
+              <DollarSign size={15} />
+              Resumo Financeiro
+            </h2>
 
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="flex items-center gap-2 text-zinc-400">
-                  <ShoppingCart size={14} /> Valor de Compra
-                </span>
-                <span className="text-zinc-200 font-mono">{fmt(parseVal(form.valorCompra))}</span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="flex items-center gap-2 text-zinc-400">
-                  <Truck size={14} />
-                  Frete
-                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                    form.modalidadeFrete === 'CIF'
-                      ? 'bg-amber-900/40 text-amber-400'
-                      : 'bg-blue-900/40 text-blue-400'}`}>
-                    {form.modalidadeFrete}
+            <div className="space-y-0 text-sm rounded-xl overflow-hidden" style={{border: '1px solid rgba(255,255,255,0.06)'}}>
+              {[
+                { icon: <ShoppingCart size={13} />, label: 'Valor de Compra', value: fmt(parseVal(form.valorCompra)), color: 'text-zinc-200' },
+                {
+                  icon: <Truck size={13} />, color: resultado.isCIF ? 'text-zinc-200' : 'text-zinc-500',
+                  label: <span className="flex items-center gap-1.5">Frete
+                    <span className={`text-xs px-1.5 py-0.5 rounded-md font-semibold ${form.modalidadeFrete === 'CIF' ? 'text-amber-400' : 'text-sky-400'}`}
+                      style={{background: form.modalidadeFrete === 'CIF' ? 'rgba(245,158,11,0.15)' : 'rgba(56,189,248,0.15)'}}>
+                      {form.modalidadeFrete}
+                    </span>
+                  </span>,
+                  value: resultado.isCIF ? fmt(resultado.frete) : `${fmt(resultado.frete)} (comprador)`
+                },
+                { icon: <DollarSign size={13} />, label: 'Valor de Venda', value: fmt(venda), color: 'text-zinc-200' },
+                { icon: <Package size={13} />, label: 'Custo Total', value: fmt(resultado.custoTotal), color: 'text-zinc-200' },
+                { icon: <BarChart2 size={13} />, label: 'Total de Impostos', value: `− ${fmt(resultado.totalImpostos)}`, color: 'text-red-400' },
+              ].map((row, i, arr) => (
+                <div key={i} className="flex items-center justify-between px-4 py-2.5"
+                  style={{background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}}>
+                  <span className="flex items-center gap-2" style={{color: 'rgba(113,113,122,0.9)'}}>
+                    {row.icon} {row.label}
                   </span>
-                </span>
-                <span className="text-zinc-400 font-mono">
-                  {resultado.isCIF ? fmt(resultado.frete) : `${fmt(resultado.frete)} (custo do comprador)`}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="flex items-center gap-2 text-zinc-400">
-                  <DollarSign size={14} /> Valor de Venda
-                </span>
-                <span className="text-zinc-200 font-mono">{fmt(venda)}</span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="flex items-center gap-2 text-zinc-400">
-                  <Package size={14} /> Custo Total
-                </span>
-                <span className="text-zinc-200 font-mono">{fmt(resultado.custoTotal)}</span>
-              </div>
-
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                <span className="flex items-center gap-2 text-zinc-400">
-                  <BarChart2 size={14} /> Total de Impostos
-                </span>
-                <span className="text-red-400 font-mono">− {fmt(resultado.totalImpostos)}</span>
-              </div>
+                  <span className={`font-mono font-medium ${row.color || 'text-zinc-400'}`}>{row.value}</span>
+                </div>
+              ))}
             </div>
 
             {/* Lucro líquido em destaque */}
-            <div className={`rounded-lg px-4 py-4 border flex items-center justify-between ${
-              resultado.lucroLiquido >= 0
-                ? 'bg-emerald-900/20 border-emerald-700/40'
-                : 'bg-red-900/20 border-red-700/40'}`}>
+            <div className="rounded-xl px-4 py-4 flex items-center justify-between"
+              style={resultado.lucroLiquido >= 0
+                ? {background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)'}
+                : {background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.2)'}}>
               <div>
-                <span className="text-sm font-semibold text-zinc-300">Lucro Líquido</span>
-                <span className="block text-xs text-zinc-500">após impostos e custos</span>
+                <span className="text-sm font-semibold text-zinc-200">Lucro Líquido</span>
+                <span className="block text-xs mt-0.5" style={{color: 'rgba(113,113,122,0.8)'}}>após impostos e custos</span>
               </div>
               <div className="text-right">
-                <span className={`font-display text-3xl tracking-wide ${
-                  resultado.lucroLiquido >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`font-mono text-2xl font-bold ${resultado.lucroLiquido >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {fmt(resultado.lucroLiquido)}
                 </span>
-                <span className={`block text-sm font-medium ${
-                  resultado.lucroLiquido >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                  {resultado.lucroLiquido >= 0 ? <TrendingUp size={14} className="inline mr-1" /> : <TrendingDown size={14} className="inline mr-1" />}
+                <span className={`flex items-center justify-end gap-1 text-sm font-medium mt-0.5 ${resultado.lucroLiquido >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {resultado.lucroLiquido >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                   Margem: {pct(resultado.margemLiquida)}
                 </span>
               </div>
@@ -895,10 +889,11 @@ export default function App() {
 
             {/* Alerta de prejuízo */}
             {resultado.lucroLiquido < 0 && venda > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-900/30 border border-red-700/50 px-4 py-3 animate-fadeSlide">
-                <AlertTriangle size={16} className="text-red-400 shrink-0" />
+              <div className="flex items-center gap-2 rounded-xl px-4 py-3 anim-up"
+                style={{background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)'}}>
+                <AlertTriangle size={15} className="text-red-400 shrink-0" />
                 <p className="text-sm text-red-300 font-medium">
-                  ⚠️ Operação com prejuízo! Revise os custos ou o preço de venda.
+                  Operação com prejuízo! Revise os custos ou o preço de venda.
                 </p>
               </div>
             )}
@@ -921,12 +916,10 @@ export default function App() {
         {/* Botão exportar */}
         <button
           onClick={handleExportar}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium
-                      text-sm transition-all duration-200 ${
-            copied
-              ? 'bg-emerald-900/30 border-emerald-600/50 text-emerald-400'
-              : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-amber-600/60 hover:text-amber-300 hover:bg-amber-900/10'
-          }`}>
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-all btn-press"
+          style={copied
+            ? {background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', color: '#34d399'}
+            : {background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: 'rgba(245,158,11,0.9)'}}>
           {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
           {copied ? 'Resumo copiado para a área de transferência!' : 'Exportar Resumo (copiar)'}
         </button>
