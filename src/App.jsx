@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import {
   Info, Trash2, Copy, TrendingUp, TrendingDown,
   Truck, AlertTriangle, DollarSign, BarChart2,
-  ShoppingCart, Package, CheckCheck, Lock, Eye, EyeOff
+  ShoppingCart, Package, CheckCheck, Lock, Eye, EyeOff, Calculator
 } from 'lucide-react'
 
 // ─── DADOS ESTÁTICOS ────────────────────────────────────────────────────────
@@ -526,36 +526,47 @@ export default function App() {
   // ── RENDER ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-body">
+    <div className="min-h-screen text-zinc-100 font-body" style={{background: 'linear-gradient(160deg, #08080f 0%, #0d0d1a 50%, #0a0a12 100%)'}}>
 
       {/* ── HEADER ── */}
-      <header className="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl tracking-widest text-amber-400 leading-none">
-              CALCULADORA DE IMPOSTOS
-            </h1>
-            <p className="text-xs text-zinc-500 mt-0.5">Revendedora de Minérios · Lucro Presumido</p>
+      <header className="sticky top-0 z-40 glass" style={{borderBottom: '1px solid rgba(245,158,11,0.15)'}}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+
+          {/* Logo + title */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{background: 'linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.08))', border: '1px solid rgba(245,158,11,0.3)'}}>
+              <Calculator size={20} className="text-amber-400" />
+            </div>
+            <div>
+              <h1 className="gradient-text font-display text-xl sm:text-2xl tracking-widest leading-none uppercase">
+                Calculadora de Impostos
+              </h1>
+              <p className="text-xs mt-0.5" style={{color: 'rgba(161,161,170,0.7)'}}>Revendedora de Minérios · Lucro Presumido</p>
+            </div>
           </div>
 
           {/* Toggle regime */}
-          <div className="flex items-center bg-zinc-800 rounded-lg p-1 border border-zinc-700 shrink-0">
+          <div className="flex items-center rounded-xl p-1 shrink-0"
+            style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)'}}>
             <button
               onClick={() => setForm(prev => ({ ...prev, regime: 'atual' }))}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all btn-press ${
                 !is2027
-                  ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-900/40'
+                  ? 'text-zinc-900 shadow-lg'
                   : 'text-zinc-400 hover:text-zinc-200'
-              }`}>
+              }`}
+              style={!is2027 ? {background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 4px 16px rgba(245,158,11,0.35)'} : {}}>
               Regime Atual (2026)
             </button>
             <button
               onClick={() => setForm(prev => ({ ...prev, regime: '2027' }))}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all btn-press ${
                 is2027
-                  ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-900/40'
+                  ? 'text-zinc-900 shadow-lg'
                   : 'text-zinc-400 hover:text-zinc-200'
-              }`}>
+              }`}
+              style={is2027 ? {background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 4px 16px rgba(245,158,11,0.35)'} : {}}>
               Reforma 2027
             </button>
           </div>
