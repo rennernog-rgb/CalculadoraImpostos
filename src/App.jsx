@@ -73,9 +73,9 @@ function getAliquotaICMS(origem, destino) {
 function calcularAtual(inputs) {
   const { valorCompra, valorVenda, valorFrete, modalidadeFrete,
           estadoOrigem, estadoDestino, estadoFornecedor } = inputs
-  const compra  = parseFloat(valorCompra) || 0
-  const venda   = parseFloat(valorVenda)  || 0
-  const frete   = parseFloat(valorFrete)  || 0
+  const compra  = parseVal(valorCompra)
+  const venda   = parseVal(valorVenda)
+  const frete   = parseVal(valorFrete)
   const isCIF   = modalidadeFrete === 'CIF'
 
   // ICMS da venda (débito)
@@ -106,9 +106,9 @@ function calcularAtual(inputs) {
 function calcular2027(inputs) {
   const { valorCompra, valorVenda, valorFrete, modalidadeFrete,
           estadoOrigem, estadoDestino, estadoFornecedor } = inputs
-  const compra  = parseFloat(valorCompra) || 0
-  const venda   = parseFloat(valorVenda)  || 0
-  const frete   = parseFloat(valorFrete)  || 0
+  const compra  = parseVal(valorCompra)
+  const venda   = parseVal(valorVenda)
+  const frete   = parseVal(valorFrete)
   const isCIF   = modalidadeFrete === 'CIF'
 
   // CBS não-cumulativa — crédito da compra abatido da CBS da venda
@@ -139,6 +139,9 @@ function calcular2027(inputs) {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+// Aceita tanto vírgula quanto ponto como separador decimal
+const parseVal = (v) => parseFloat(String(v ?? '').replace(',', '.')) || 0
 
 const fmt = (v) =>
   (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -339,7 +342,7 @@ export default function App() {
   const resultado2027  = useMemo(() => calcular2027(form),  [form])
   const resultado      = form.regime === 'atual' ? resultadoAtual : resultado2027
   const is2027         = form.regime === '2027'
-  const venda          = parseFloat(form.valorVenda) || 0
+  const venda          = parseVal(form.valorVenda)
 
   function handleExportar() {
     const r   = resultado
@@ -359,9 +362,9 @@ export default function App() {
       `  Frete: ${form.modalidadeFrete}`,
       ``,
       `VALORES`,
-      `  Valor de Compra : ${fmt(parseFloat(form.valorCompra) || 0)}`,
+      `  Valor de Compra : ${fmt(parseVal(form.valorCompra))}`,
       `  Valor de Venda  : ${fmt(venda)}`,
-      `  Valor do Frete  : ${fmt(parseFloat(form.valorFrete) || 0)} (${form.modalidadeFrete})`,
+      `  Valor do Frete  : ${fmt(parseVal(form.valorFrete))} (${form.modalidadeFrete})`,
       `  Custo Total     : ${fmt(r.custoTotal)}`,
       ``,
       `IMPOSTOS`,
@@ -476,13 +479,13 @@ export default function App() {
             <div className="grid grid-cols-2 gap-3">
               <LabelField label="Valor de Compra (R$)"
                 tooltip="Preço pago ao produtor/mineradora pelo minério.">
-                <input type="number" name="valorCompra" value={form.valorCompra}
-                  onChange={handleChange} placeholder="0,00" min="0" step="0.01" className={inputCls} />
+                <input type="text" inputMode="decimal" name="valorCompra" value={form.valorCompra}
+                  onChange={handleChange} placeholder="0,00" className={inputCls} />
               </LabelField>
               <LabelField label="Valor de Venda (R$)"
                 tooltip="Preço cobrado pelo minério na revenda. Base de cálculo principal dos impostos.">
-                <input type="number" name="valorVenda" value={form.valorVenda}
-                  onChange={handleChange} placeholder="0,00" min="0" step="0.01" className={inputCls} />
+                <input type="text" inputMode="decimal" name="valorVenda" value={form.valorVenda}
+                  onChange={handleChange} placeholder="0,00" className={inputCls} />
               </LabelField>
             </div>
 
@@ -490,8 +493,8 @@ export default function App() {
             <div className="grid grid-cols-2 gap-3">
               <LabelField label="Valor do Frete (R$)"
                 tooltip="Valor do frete da operação. No CIF, entra na base do ICMS. No FOB, é custo do comprador.">
-                <input type="number" name="valorFrete" value={form.valorFrete}
-                  onChange={handleChange} placeholder="0,00" min="0" step="0.01" className={inputCls} />
+                <input type="text" inputMode="decimal" name="valorFrete" value={form.valorFrete}
+                  onChange={handleChange} placeholder="0,00" className={inputCls} />
               </LabelField>
               <LabelField label="Modalidade do Frete"
                 tooltip="CIF (Cost, Insurance & Freight): o vendedor arca com o frete — valor entra na base do ICMS. FOB (Free on Board): o comprador contrata o frete — não entra na base do ICMS desta NF.">
@@ -681,7 +684,7 @@ export default function App() {
                 <span className="flex items-center gap-2 text-zinc-400">
                   <ShoppingCart size={14} /> Valor de Compra
                 </span>
-                <span className="text-zinc-200 font-mono">{fmt(parseFloat(form.valorCompra) || 0)}</span>
+                <span className="text-zinc-200 font-mono">{fmt(parseVal(form.valorCompra))}</span>
               </div>
 
               <div className="flex items-center justify-between py-2 border-b border-zinc-800">
