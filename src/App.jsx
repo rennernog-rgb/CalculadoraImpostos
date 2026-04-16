@@ -78,8 +78,8 @@ function calcularAtual(inputs) {
   const frete   = parseVal(valorFrete)
   const isCIF   = modalidadeFrete === 'CIF'
 
-  // ICMS da venda (débito)
-  const baseICMS    = isCIF ? venda + frete : venda
+  // ICMS da venda (débito) — base sempre o valor de venda (frete já incluso)
+  const baseICMS    = venda
   const aliqICMS    = getAliquotaICMS(estadoOrigem, estadoDestino)
   const icmsDebito  = baseICMS * aliqICMS
 
@@ -117,8 +117,8 @@ function calcular2027(inputs) {
   const cbsLiquida = Math.max(0, cbsBruta - cbsCredito)
   const ibs        = venda * 0.001
 
-  // ICMS ainda vigente em 2027 com aproveitamento
-  const baseICMS       = isCIF ? venda + frete : venda
+  // ICMS ainda vigente em 2027 com aproveitamento — base sempre valor de venda
+  const baseICMS       = venda
   const aliqICMS       = getAliquotaICMS(estadoOrigem, estadoDestino)
   const icmsDebito     = baseICMS * aliqICMS
   const aliqICMSCompra = getAliquotaICMS(estadoFornecedor, estadoOrigem)
@@ -811,7 +811,7 @@ export default function App() {
               <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(255,255,255,0.03)'}}>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium text-zinc-200">ICMS Débito</span>
-                  <Tooltip texto={`ICMS da venda. Alíquota ${pct(resultado.aliqICMS * 100)} para ${form.estadoOrigem}→${form.estadoDestino}. Base: ${fmt(resultado.baseICMS)} (${resultado.isCIF ? 'CIF: inclui frete' : 'FOB: apenas venda'}).`} />
+                  <Tooltip texto={`ICMS da venda. Alíquota ${pct(resultado.aliqICMS * 100)} para ${form.estadoOrigem}→${form.estadoDestino}. Base: ${fmt(resultado.baseICMS)} (valor de venda, frete já incluso).`} />
                   <span className="ml-1 text-xs font-mono text-zinc-500">{pct(resultado.aliqICMS * 100)}</span>
                 </div>
                 <span className="font-mono text-base font-semibold text-zinc-100">{fmt(resultado.icmsDebito)}</span>
