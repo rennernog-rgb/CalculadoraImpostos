@@ -416,7 +416,7 @@ function TelaLogin({ onAutenticar }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
-      style={{background: 'linear-gradient(160deg, #08080f 0%, #0d0d1a 50%, #0a0a12 100%)'}}>
+      style={{background: '#111118'}}>
 
       {/* Fundo decorativo — brilhos radiais */}
       <div className="absolute inset-0 pointer-events-none">
@@ -600,7 +600,7 @@ export default function App() {
   // ── RENDER ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen text-zinc-100 font-body" style={{background: 'linear-gradient(160deg, #08080f 0%, #0d0d1a 50%, #0a0a12 100%)'}}>
+    <div className="min-h-screen text-zinc-100 font-body" style={{background: '#111118'}}>
 
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-40 glass" style={{borderBottom: '1px solid rgba(245,158,11,0.15)'}}>
