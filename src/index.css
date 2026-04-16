@@ -20,7 +20,11 @@ body {
 /* ── Select options ── */
 select option { background: #13131f; color: #e2e8f0; }
 
-/* ── Input glow on focus ── */
+/* ── Input base + glow on focus ── */
+.input-glow {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
 .input-glow:focus {
   outline: none;
   border-color: rgba(245, 158, 11, 0.6);

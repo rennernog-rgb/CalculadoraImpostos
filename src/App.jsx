@@ -189,7 +189,8 @@ function CardImposto({ nome, aliq, valor, tooltip, destaque = false }) {
 function LabelField({ children, label, tooltip }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center">
+      <span className="text-xs font-semibold uppercase tracking-widest flex items-center gap-0.5"
+        style={{color: 'rgba(161,161,170,0.85)'}}>
         {label}
         {tooltip && <Tooltip texto={tooltip} />}
       </span>
@@ -198,9 +199,8 @@ function LabelField({ children, label, tooltip }) {
   )
 }
 
-const inputCls = `w-full bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg px-3 py-2.5
-  text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30
-  placeholder-zinc-600 transition-colors`
+const inputCls = `w-full text-zinc-100 rounded-xl px-3 py-2.5 text-sm placeholder-zinc-600
+  transition-all input-glow`
 
 const selectCls = `${inputCls} cursor-pointer`
 
@@ -591,9 +591,13 @@ export default function App() {
         {/* ════════════════════════════════════════
             COLUNA ESQUERDA — FORMULÁRIO
             ════════════════════════════════════════ */}
-        <section className="space-y-5">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-            <h2 className="font-display text-xl tracking-widest text-zinc-300">DADOS DA OPERAÇÃO</h2>
+        <section className="space-y-5 anim-up">
+          <div className="glass rounded-2xl p-5 space-y-4 card-lift" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+              style={{color: 'rgba(245,158,11,0.9)'}}>
+              <ShoppingCart size={15} />
+              Dados da Operação
+            </h2>
 
             {/* Tipo de minério */}
             <LabelField label="Tipo de Minério"
@@ -636,10 +640,14 @@ export default function App() {
             </div>
 
             {/* Tag frete */}
-            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs border ${
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${
               form.modalidadeFrete === 'CIF'
-                ? 'bg-amber-900/20 border-amber-700/30 text-amber-300'
-                : 'bg-blue-900/20 border-blue-700/30 text-blue-300'}`}>
+                ? 'text-amber-300'
+                : 'text-sky-300'}`}
+              style={{
+                background: form.modalidadeFrete === 'CIF' ? 'rgba(245,158,11,0.08)' : 'rgba(56,189,248,0.08)',
+                border: form.modalidadeFrete === 'CIF' ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(56,189,248,0.2)'
+              }}>
               <Truck size={13} />
               {form.modalidadeFrete === 'CIF'
                 ? 'Frete CIF: ICMS incide sobre o frete'
@@ -648,8 +656,12 @@ export default function App() {
           </div>
 
           {/* Estados */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-            <h2 className="font-display text-xl tracking-widest text-zinc-300">ORIGEM & DESTINO</h2>
+          <div className="glass rounded-2xl p-5 space-y-4 card-lift" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
+            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+              style={{color: 'rgba(245,158,11,0.9)'}}>
+              <Truck size={15} />
+              Origem & Destino
+            </h2>
 
             <LabelField label="Estado do Fornecedor (Compra)"
               tooltip="Estado de onde você comprou o minério. Determina a alíquota de ICMS que gerou crédito na entrada, que será abatida do ICMS da venda.">
@@ -680,13 +692,15 @@ export default function App() {
             </div>
 
             {/* Tags ICMS */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between rounded-lg bg-emerald-900/20 border border-emerald-800/40 px-3 py-2 text-xs">
-                <span className="text-zinc-400">Crédito ICMS compra ({form.estadoFornecedor}→{form.estadoOrigem})</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-xl px-3 py-2.5 text-xs"
+                style={{background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.18)'}}>
+                <span style={{color: 'rgba(161,161,170,0.8)'}}>Crédito ICMS compra ({form.estadoFornecedor}→{form.estadoOrigem})</span>
                 <span className="text-emerald-400 font-mono font-semibold">{pct(resultado.aliqICMSCompra * 100)}</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-zinc-800/60 border border-zinc-700/40 px-3 py-2 text-xs">
-                <span className="text-zinc-400">
+              <div className="flex items-center justify-between rounded-xl px-3 py-2.5 text-xs"
+                style={{background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)'}}>
+                <span style={{color: 'rgba(161,161,170,0.8)'}}>
                   {form.estadoOrigem === form.estadoDestino ? 'Débito ICMS venda — operação interna' : 'Débito ICMS venda — operação interestadual'}
                 </span>
                 <span className="text-amber-400 font-mono font-semibold">{pct(resultado.aliqICMS * 100)}</span>
@@ -696,8 +710,10 @@ export default function App() {
 
           {/* Botão limpar */}
           <button onClick={handleLimpar}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-zinc-700
-                       text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors text-sm">
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all btn-press"
+            style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(161,161,170,0.8)'}}
+            onMouseEnter={e => { e.currentTarget.style.color = '#e2e8f0'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(161,161,170,0.8)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
             <Trash2 size={15} />
             Limpar campos
           </button>
