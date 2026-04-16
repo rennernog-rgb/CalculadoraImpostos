@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import {
   Info, Trash2, Copy, TrendingUp, TrendingDown,
   Truck, AlertTriangle, DollarSign, BarChart2,
-  ShoppingCart, Package, CheckCheck
+  ShoppingCart, Package, CheckCheck, Lock, Eye, EyeOff
 } from 'lucide-react'
 
 // ─── DADOS ESTÁTICOS ────────────────────────────────────────────────────────
@@ -325,9 +325,126 @@ const estadoInicial = {
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
 
+// ─── SENHA ───────────────────────────────────────────────────────────────────
+const SENHA_CORRETA = '12345'
+
+// ─── TELA DE LOGIN ────────────────────────────────────────────────────────────
+
+function TelaLogin({ onAutenticar }) {
+  const [senha, setSenha]       = useState('')
+  const [erro, setErro]         = useState(false)
+  const [visivel, setVisivel]   = useState(false)
+  const [tentativas, setTentativas] = useState(0)
+  const inputRef = useRef(null)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (senha === SENHA_CORRETA) {
+      onAutenticar()
+    } else {
+      setErro(true)
+      setTentativas(t => t + 1)
+      setSenha('')
+      setTimeout(() => setErro(false), 2000)
+      inputRef.current?.focus()
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4">
+      {/* Fundo decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-sm">
+        {/* Logo / título */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
+            <Lock size={28} className="text-amber-400" />
+          </div>
+          <h1 className="font-display text-3xl tracking-widest text-amber-400">
+            CALCULADORA
+          </h1>
+          <p className="text-xs text-zinc-500 mt-1 tracking-wide">
+            Revendedora de Minérios · Acesso Restrito
+          </p>
+        </div>
+
+        {/* Card de login */}
+        <form
+          onSubmit={handleSubmit}
+          className={`bg-zinc-900 border rounded-2xl p-6 space-y-4 transition-all duration-300 ${
+            erro ? 'border-red-600/60 shadow-red-900/20 shadow-lg' : 'border-zinc-800'
+          }`}
+        >
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+              Senha de Acesso
+            </label>
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type={visivel ? 'text' : 'password'}
+                inputMode="numeric"
+                value={senha}
+                onChange={e => { setSenha(e.target.value); setErro(false) }}
+                placeholder="••••••"
+                autoFocus
+                className={`w-full bg-zinc-800 border rounded-lg px-4 py-3 pr-11 text-zinc-100
+                  text-center text-xl tracking-[0.5em] font-mono
+                  focus:outline-none focus:ring-1 transition-colors placeholder-zinc-600 ${
+                  erro
+                    ? 'border-red-600 focus:border-red-500 focus:ring-red-500/30'
+                    : 'border-zinc-700 focus:border-amber-500 focus:ring-amber-500/30'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setVisivel(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {visivel ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {/* Mensagem de erro */}
+            {erro && (
+              <p className="text-xs text-red-400 mt-2 text-center animate-fadeSlide">
+                Senha incorreta. Tente novamente.
+                {tentativas >= 3 && ' Verifique com o administrador.'}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 rounded-lg bg-amber-500 hover:bg-amber-400 active:bg-amber-600
+                       text-zinc-900 font-semibold text-sm tracking-wide transition-colors
+                       shadow-lg shadow-amber-900/30"
+          >
+            Entrar
+          </button>
+        </form>
+
+        <p className="text-center text-xs text-zinc-700 mt-6">
+          Uso interno · Lucro Presumido
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+
 export default function App() {
+  const [autenticado, setAutenticado] = useState(false)
   const [form, setForm]     = useState(estadoInicial)
   const [copied, setCopied] = useState(false)
+
+  if (!autenticado) {
+    return <TelaLogin onAutenticar={() => setAutenticado(true)} />
+  }
 
   function handleChange(e) {
     const { name, value } = e.target
