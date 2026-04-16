@@ -74,6 +74,130 @@ function getAliquotaICMS(origem, destino) {
   return 0.12
 }
 
+// ─── FUNÇÕES DE CÁLCULO ──────────────────────────────────────────────────────
+
+function calcularAtual(inputs) {
+  const {
+    tipoMinerio, valorCompra, valorVenda, valorFrete,
+    modalidadeFrete, estadoOrigem, estadoDestino,
+  } = inputs
+
+  const compra  = parseFloat(valorCompra) || 0
+  const venda   = parseFloat(valorVenda)  || 0
+  const frete   = parseFloat(valorFrete)  || 0
+  const isCIF   = modalidadeFrete === 'CIF'
+
+  const minerio = minerios.find(m => m.id === tipoMinerio) ?? minerios[0]
+
+  // Base de cálculo do ICMS
+  const baseICMS = isCIF ? venda + frete : venda
+
+  // ICMS
+  const aliqICMS = getAliquotaICMS(estadoOrigem, estadoDestino)
+  const icms     = baseICMS * aliqICMS
+
+  // PIS + COFINS (regime cumulativo — Lucro Presumido)
+  const pisCofins = venda * 0.0365   // 0,65% + 3%
+
+  // IRPJ + CSLL (Lucro Presumido)
+  const irpjCsll  = venda * 0.0228   // 1,2% + 1,08%
+
+  // TRIFON / Taxa de Fiscalização Mineral
+  const trifon    = venda * 0.01
+
+  // CFEM — apenas informativo (custo da mineradora, embutido no preço de compra)
+  const cfemInformativo = compra * minerio.cfem
+
+  const totalImpostos = icms + pisCofins + irpjCsll + trifon
+
+  const custoTotal   = isCIF ? compra + frete : compra
+  const lucroBruto   = venda - custoTotal
+  const lucroLiquido = lucroBruto - totalImpostos
+  const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
+
+  return {
+    baseICMS,
+    aliqICMS,
+    icms,
+    pisCofins,
+    irpjCsll,
+    trifon,
+    cfemInformativo,
+    cfemAliq: minerio.cfem,
+    totalImpostos,
+    custoTotal,
+    lucroBruto,
+    lucroLiquido,
+    margemLiquida,
+    isCIF,
+    frete,
+  }
+}
+
+function calcular2027(inputs) {
+  const {
+    tipoMinerio, valorCompra, valorVenda, valorFrete,
+    modalidadeFrete, estadoOrigem, estadoDestino,
+  } = inputs
+
+  const compra  = parseFloat(valorCompra) || 0
+  const venda   = parseFloat(valorVenda)  || 0
+  const frete   = parseFloat(valorFrete)  || 0
+  const isCIF   = modalidadeFrete === 'CIF'
+
+  const minerio = minerios.find(m => m.id === tipoMinerio) ?? minerios[0]
+
+  // PIS/COFINS extintos
+  const pisCofins = 0
+
+  // CBS — substitui PIS/COFINS
+  const cbs = venda * 0.088
+
+  // IBS — fase inicial de transição (ainda baixo)
+  const ibs = venda * 0.001
+
+  // ICMS ainda vigente em 2027 (extinção gradual a partir de 2029)
+  const baseICMS = isCIF ? venda + frete : venda
+  const aliqICMS = getAliquotaICMS(estadoOrigem, estadoDestino)
+  const icms     = baseICMS * aliqICMS
+
+  // IRPJ + CSLL sem alteração
+  const irpjCsll = venda * 0.0228
+
+  // TRIFON sem alteração
+  const trifon = venda * 0.01
+
+  // CFEM informativo
+  const cfemInformativo = compra * minerio.cfem
+
+  const totalImpostos = cbs + ibs + icms + irpjCsll + trifon
+
+  const custoTotal    = isCIF ? compra + frete : compra
+  const lucroBruto    = venda - custoTotal
+  const lucroLiquido  = lucroBruto - totalImpostos
+  const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
+
+  return {
+    baseICMS,
+    aliqICMS,
+    icms,
+    pisCofins,
+    cbs,
+    ibs,
+    irpjCsll,
+    trifon,
+    cfemInformativo,
+    cfemAliq: minerio.cfem,
+    totalImpostos,
+    custoTotal,
+    lucroBruto,
+    lucroLiquido,
+    margemLiquida,
+    isCIF,
+    frete,
+  }
+}
+
 // ─── ESTADO INICIAL DO FORMULÁRIO ───────────────────────────────────────────
 
 const estadoInicial = {
@@ -100,6 +224,13 @@ export default function App() {
   function handleLimpar() {
     setForm(estadoInicial)
   }
+
+  // Resultados recalculados automaticamente a cada mudança no formulário
+  const resultadoAtual = useMemo(() => calcularAtual(form), [form])
+  const resultado2027  = useMemo(() => calcular2027(form),  [form])
+
+  // Resultado do regime selecionado no toggle
+  const resultado = form.regime === 'atual' ? resultadoAtual : resultado2027
 
   return (
     <div>App em construção</div>
