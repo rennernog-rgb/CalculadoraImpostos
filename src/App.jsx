@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import {
   Info, Trash2, Copy, TrendingUp, TrendingDown,
   Truck, AlertTriangle, DollarSign, BarChart2,
-  ShoppingCart, Package
+  ShoppingCart, Package, CheckCheck
 } from 'lucide-react'
 
 // ─── DADOS ESTÁTICOS ────────────────────────────────────────────────────────
@@ -201,6 +201,111 @@ const inputCls = `w-full bg-zinc-800 border border-zinc-700 text-zinc-100 rounde
 
 const selectCls = `${inputCls} cursor-pointer`
 
+// ─── COMPONENTE COMPARATIVO ──────────────────────────────────────────────────
+
+function ComparativoRegimes({ atual, r2027, venda }) {
+  const diffImpostos   = r2027.totalImpostos - atual.totalImpostos
+  const diffLucro      = r2027.lucroLiquido  - atual.lucroLiquido
+  const pctDiffImp     = atual.totalImpostos !== 0
+    ? (diffImpostos / Math.abs(atual.totalImpostos)) * 100 : 0
+  const pctDiffLucro   = atual.lucroLiquido !== 0
+    ? (diffLucro / Math.abs(atual.lucroLiquido)) * 100 : 0
+
+  const Seta = ({ diff, pct: p, inverso = false }) => {
+    const sobe = diff > 0
+    const cor  = inverso
+      ? (sobe ? 'text-red-400' : 'text-emerald-400')
+      : (sobe ? 'text-emerald-400' : 'text-red-400')
+    return (
+      <span className={`flex items-center gap-0.5 text-xs font-semibold ${cor}`}>
+        {sobe ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+        {sobe ? '+' : ''}{p.toFixed(1).replace('.', ',')}%
+      </span>
+    )
+  }
+
+  const linhas = [
+    {
+      label: 'Total de Impostos',
+      v2026: atual.totalImpostos,
+      v2027: r2027.totalImpostos,
+      diff: diffImpostos,
+      pctDiff: pctDiffImp,
+      inverso: true,
+    },
+    {
+      label: 'Lucro Líquido',
+      v2026: atual.lucroLiquido,
+      v2027: r2027.lucroLiquido,
+      diff: diffLucro,
+      pctDiff: pctDiffLucro,
+      inverso: false,
+    },
+    {
+      label: 'Margem Líquida',
+      v2026: null,
+      v2027: null,
+      margem2026: atual.margemLiquida,
+      margem2027: r2027.margemLiquida,
+      isMargem: true,
+    },
+  ]
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+      <h2 className="font-display text-xl tracking-widest text-zinc-300 mb-4">
+        COMPARATIVO 2026 vs 2027
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-800">
+              <th className="text-left text-xs text-zinc-500 pb-2 font-medium">Indicador</th>
+              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">2026 (Atual)</th>
+              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">2027 (Reforma)</th>
+              <th className="text-right text-xs text-zinc-500 pb-2 font-medium">Variação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((l) => (
+              <tr key={l.label} className="border-b border-zinc-800/60 last:border-0">
+                <td className="py-3 text-zinc-400">{l.label}</td>
+                {l.isMargem ? (
+                  <>
+                    <td className="py-3 text-right font-mono text-zinc-200">
+                      {l.margem2026.toFixed(2).replace('.', ',')}%
+                    </td>
+                    <td className="py-3 text-right font-mono text-zinc-200">
+                      {l.margem2027.toFixed(2).replace('.', ',')}%
+                    </td>
+                    <td className="py-3 text-right">
+                      <Seta diff={l.margem2027 - l.margem2026} pct={Math.abs(l.margem2027 - l.margem2026)} inverso={false} />
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className={`py-3 text-right font-mono ${l.v2026 < 0 ? 'text-red-400' : 'text-zinc-200'}`}>
+                      {fmt(l.v2026)}
+                    </td>
+                    <td className={`py-3 text-right font-mono ${l.v2027 < 0 ? 'text-red-400' : 'text-zinc-200'}`}>
+                      {fmt(l.v2027)}
+                    </td>
+                    <td className="py-3 text-right">
+                      {venda > 0
+                        ? <Seta diff={l.diff} pct={Math.abs(l.pctDiff)} inverso={l.inverso} />
+                        : <span className="text-zinc-600 text-xs">—</span>}
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ─── ESTADO INICIAL ───────────────────────────────────────────────────────────
 
 const estadoInicial = {
@@ -217,7 +322,8 @@ const estadoInicial = {
 // ─── APP ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [form, setForm] = useState(estadoInicial)
+  const [form, setForm]     = useState(estadoInicial)
+  const [copied, setCopied] = useState(false)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -233,6 +339,64 @@ export default function App() {
   const resultado      = form.regime === 'atual' ? resultadoAtual : resultado2027
   const is2027         = form.regime === '2027'
   const venda          = parseFloat(form.valorVenda) || 0
+
+  function handleExportar() {
+    const r   = resultado
+    const reg = is2027 ? 'Reforma Tributária 2027' : 'Regime Atual 2026'
+    const minerio = minerios.find(m => m.id === form.tipoMinerio)
+    const data = new Date().toLocaleDateString('pt-BR')
+
+    const linhas = [
+      `╔═══════════════════════════════════════╗`,
+      `  CALCULADORA DE IMPOSTOS — REVENDEDORA DE MINÉRIOS`,
+      `  Regime: ${reg}   |   Data: ${data}`,
+      `╚═══════════════════════════════════════╝`,
+      ``,
+      `OPERAÇÃO`,
+      `  Minério: ${minerio?.nome ?? form.tipoMinerio}`,
+      `  Origem: ${form.estadoOrigem} → Destino: ${form.estadoDestino}`,
+      `  Frete: ${form.modalidadeFrete}`,
+      ``,
+      `VALORES`,
+      `  Valor de Compra : ${fmt(parseFloat(form.valorCompra) || 0)}`,
+      `  Valor de Venda  : ${fmt(venda)}`,
+      `  Valor do Frete  : ${fmt(parseFloat(form.valorFrete) || 0)} (${form.modalidadeFrete})`,
+      `  Custo Total     : ${fmt(r.custoTotal)}`,
+      ``,
+      `IMPOSTOS`,
+      `  ICMS (${pct(r.aliqICMS * 100)})     : ${fmt(r.icms)}`,
+      ...(is2027
+        ? [
+            `  CBS (8,80%)          : ${fmt(resultado2027.cbs)}`,
+            `  IBS (0,10%)          : ${fmt(resultado2027.ibs)}`,
+            `  PIS/COFINS           : R$ 0,00 (extintos)`,
+          ]
+        : [`  PIS+COFINS (3,65%)  : ${fmt(r.pisCofins)}`]),
+      `  IRPJ+CSLL (2,28%)    : ${fmt(r.irpjCsll)}`,
+      `  TRIFON (1,00%)       : ${fmt(r.trifon)}`,
+      `  CFEM (informativo)   : ${fmt(r.cfemInformativo)}`,
+      `  ─────────────────────────────────────`,
+      `  TOTAL DE IMPOSTOS    : ${fmt(r.totalImpostos)}`,
+      ``,
+      `RESULTADO`,
+      `  Lucro Bruto    : ${fmt(r.lucroBruto)}`,
+      `  Lucro Líquido  : ${fmt(r.lucroLiquido)}`,
+      `  Margem Líquida : ${pct(r.margemLiquida)}`,
+      ``,
+      `COMPARATIVO 2026 vs 2027`,
+      `  Impostos 2026  : ${fmt(resultadoAtual.totalImpostos)}`,
+      `  Impostos 2027  : ${fmt(resultado2027.totalImpostos)}`,
+      `  Lucro 2026     : ${fmt(resultadoAtual.lucroLiquido)}`,
+      `  Lucro 2027     : ${fmt(resultado2027.lucroLiquido)}`,
+      ``,
+      `Estimativas fiscais para Lucro Presumido. Consulte um contador.`,
+    ]
+
+    navigator.clipboard.writeText(linhas.join('\n')).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    })
+  }
 
   // ── RENDER ────────────────────────────────────────────────────────────────
 
@@ -554,14 +718,40 @@ export default function App() {
             )}
           </div>
 
-          {/* Rodapé */}
-          <p className="text-xs text-zinc-600 leading-relaxed text-center px-2">
-            Cálculos baseados em estimativas fiscais para revendedoras no Lucro Presumido.
-            Alíquotas da Reforma Tributária (2027) são projeções sujeitas a regulamentação.
-            Consulte um contador.
-          </p>
         </section>
       </main>
+
+      {/* ════════════════════════════════════════
+          SEÇÃO FULL-WIDTH — COMPARATIVO + EXPORTAR
+          ════════════════════════════════════════ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
+
+        <ComparativoRegimes
+          atual={resultadoAtual}
+          r2027={resultado2027}
+          venda={venda}
+        />
+
+        {/* Botão exportar */}
+        <button
+          onClick={handleExportar}
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium
+                      text-sm transition-all duration-200 ${
+            copied
+              ? 'bg-emerald-900/30 border-emerald-600/50 text-emerald-400'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-amber-600/60 hover:text-amber-300 hover:bg-amber-900/10'
+          }`}>
+          {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
+          {copied ? 'Resumo copiado para a área de transferência!' : 'Exportar Resumo (copiar)'}
+        </button>
+
+        {/* Rodapé */}
+        <p className="text-xs text-zinc-600 leading-relaxed text-center px-2 pb-2">
+          Cálculos baseados em estimativas fiscais para revendedoras no Lucro Presumido.
+          Alíquotas da Reforma Tributária (2027) são projeções sujeitas a regulamentação.
+          Consulte um contador.
+        </p>
+      </div>
     </div>
   )
 }
