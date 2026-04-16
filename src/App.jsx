@@ -111,9 +111,11 @@ function calcular2027(inputs) {
   const frete   = parseFloat(valorFrete)  || 0
   const isCIF   = modalidadeFrete === 'CIF'
 
-  // CBS e IBS (não-cumulativos — crédito simplificado)
-  const cbs = venda * 0.088
-  const ibs = venda * 0.001
+  // CBS não-cumulativa — crédito da compra abatido da CBS da venda
+  const cbsBruta   = venda * 0.088
+  const cbsCredito = compra * 0.088
+  const cbsLiquida = Math.max(0, cbsBruta - cbsCredito)
+  const ibs        = venda * 0.001
 
   // ICMS ainda vigente em 2027 com aproveitamento
   const baseICMS       = isCIF ? venda + frete : venda
@@ -125,14 +127,14 @@ function calcular2027(inputs) {
 
   const irpjCsll      = venda * 0.0228
   const pisCofins     = 0
-  const totalImpostos = cbs + ibs + icmsLiquido + irpjCsll
+  const totalImpostos = cbsLiquida + ibs + icmsLiquido + irpjCsll
   const custoTotal    = isCIF ? compra + frete : compra
   const lucroBruto    = venda - custoTotal
   const lucroLiquido  = lucroBruto - totalImpostos
   const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
 
   return { baseICMS, aliqICMS, aliqICMSCompra, icmsDebito, icmsCredito, icmsLiquido,
-           cbs, ibs, pisCofins, irpjCsll, totalImpostos,
+           cbsBruta, cbsCredito, cbsLiquida, ibs, pisCofins, irpjCsll, totalImpostos,
            custoTotal, lucroBruto, lucroLiquido, margemLiquida, isCIF, frete }
 }
 
@@ -368,7 +370,9 @@ export default function App() {
       `  ICMS a Recolher              : ${fmt(r.icmsLiquido)}`,
       ...(is2027
         ? [
-            `  CBS (8,80%)          : ${fmt(resultado2027.cbs)}`,
+            `  CBS Bruta  (8,80%)   : ${fmt(resultado2027.cbsBruta)}`,
+      `  CBS Crédito          : − ${fmt(resultado2027.cbsCredito)}`,
+      `  CBS a Recolher       : ${fmt(resultado2027.cbsLiquida)}`,
             `  IBS (0,10%)          : ${fmt(resultado2027.ibs)}`,
             `  PIS/COFINS           : R$ 0,00 (extintos em 2027)`,
           ]
@@ -460,12 +464,10 @@ export default function App() {
 
             {/* Tipo de minério */}
             <LabelField label="Tipo de Minério"
-              tooltip="Selecione o minério negociado. A alíquota CFEM varia por tipo e é exibida de forma informativa.">
+              tooltip="Selecione o minério comercializado na operação de revenda.">
               <select name="tipoMinerio" value={form.tipoMinerio} onChange={handleChange} className={selectCls}>
                 {minerios.map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome} — CFEM {(m.cfem * 100).toFixed(1)}%
-                  </option>
+                  <option key={m.id} value={m.id}>{m.nome}</option>
                 ))}
               </select>
             </LabelField>
@@ -603,13 +605,29 @@ export default function App() {
 
             {is2027 ? (
               <>
-                <CardImposto
-                  nome="CBS"
-                  aliq="8,80%"
-                  valor={resultado2027.cbs}
-                  tooltip="Contribuição sobre Bens e Serviços. Substitui o PIS e a COFINS a partir de 2027 (Reforma Tributária). Alíquota estimada em 8,8%."
-                  destaque
-                />
+                {/* CBS com crédito da compra */}
+                <div className="rounded-lg border border-amber-700/30 bg-amber-900/10 overflow-hidden">
+                  <div className="px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-amber-300">CBS Bruta</span>
+                      <Tooltip texto="CBS (Contribuição sobre Bens e Serviços) devida sobre o valor de venda. Alíquota estimada: 8,8%. Substitui o PIS/COFINS a partir de 2027." />
+                      <span className="ml-1 text-xs text-amber-600 font-mono">8,80%</span>
+                    </div>
+                    <span className="font-display text-lg tracking-wide text-amber-200">{fmt(resultado2027.cbsBruta)}</span>
+                  </div>
+                  <div className="px-4 py-2.5 flex items-center justify-between border-t border-amber-800/30 bg-emerald-900/10">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-emerald-400">CBS Crédito</span>
+                      <Tooltip texto="Sua revendedora aproveita o crédito de CBS pago pelo fornecedor na etapa anterior da cadeia. Apenas a diferença é recolhida." />
+                      <span className="ml-1 text-xs text-emerald-600 font-mono">8,80%</span>
+                    </div>
+                    <span className="font-display text-lg tracking-wide text-emerald-400">− {fmt(resultado2027.cbsCredito)}</span>
+                  </div>
+                  <div className="px-4 py-2.5 flex items-center justify-between border-t border-amber-800/30 bg-amber-900/20">
+                    <span className="text-sm font-semibold text-amber-300">CBS a Recolher</span>
+                    <span className="font-display text-lg tracking-wide text-amber-400">{fmt(resultado2027.cbsLiquida)}</span>
+                  </div>
+                </div>
                 <CardImposto
                   nome="IBS"
                   aliq="0,10%"
