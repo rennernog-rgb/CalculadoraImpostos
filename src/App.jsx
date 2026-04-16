@@ -355,22 +355,31 @@ function TelaLogin({ onAutenticar }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4">
-      {/* Fundo decorativo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
+      style={{background: 'linear-gradient(160deg, #08080f 0%, #0d0d1a 50%, #0a0a12 100%)'}}>
+
+      {/* Fundo decorativo — brilhos radiais */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+          style={{background: 'radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%)'}} />
+        <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full"
+          style={{background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)'}} />
       </div>
 
-      <div className="relative w-full max-w-sm">
-        {/* Logo / título */}
+      <div className="relative w-full max-w-xs anim-up">
+
+        {/* Ícone + título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
-            <Lock size={28} className="text-amber-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+            style={{background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.06))',
+              border: '1px solid rgba(245,158,11,0.3)',
+              boxShadow: '0 0 32px rgba(245,158,11,0.15)'}}>
+            <Lock size={26} className="text-amber-400" />
           </div>
-          <h1 className="font-display text-3xl tracking-widest text-amber-400">
-            CALCULADORA
+          <h1 className="gradient-text font-display text-2xl tracking-widest uppercase leading-none">
+            Calculadora
           </h1>
-          <p className="text-xs text-zinc-500 mt-1 tracking-wide">
+          <p className="text-xs mt-2 tracking-wide" style={{color: 'rgba(113,113,122,0.8)'}}>
             Revendedora de Minérios · Acesso Restrito
           </p>
         </div>
@@ -378,12 +387,14 @@ function TelaLogin({ onAutenticar }) {
         {/* Card de login */}
         <form
           onSubmit={handleSubmit}
-          className={`bg-zinc-900 border rounded-2xl p-6 space-y-4 transition-all duration-300 ${
-            erro ? 'border-red-600/60 shadow-red-900/20 shadow-lg' : 'border-zinc-800'
-          }`}
+          className={`glass rounded-2xl p-6 space-y-5 transition-all duration-200 ${erro ? 'shake' : ''}`}
+          style={erro
+            ? {border: '1px solid rgba(248,113,113,0.4)', boxShadow: '0 0 24px rgba(248,113,113,0.1)'}
+            : {border: '1px solid rgba(255,255,255,0.08)'}}
         >
           <div>
-            <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-2.5"
+              style={{color: 'rgba(161,161,170,0.85)'}}>
               Senha de Acesso
             </label>
             <div className="relative">
@@ -393,20 +404,20 @@ function TelaLogin({ onAutenticar }) {
                 inputMode="numeric"
                 value={senha}
                 onChange={e => { setSenha(e.target.value); setErro(false) }}
-                placeholder="••••••"
+                placeholder="••••"
                 autoFocus
-                className={`w-full bg-zinc-800 border rounded-lg px-4 py-3 pr-11 text-zinc-100
-                  text-center text-xl tracking-[0.5em] font-mono
-                  focus:outline-none focus:ring-1 transition-colors placeholder-zinc-600 ${
-                  erro
-                    ? 'border-red-600 focus:border-red-500 focus:ring-red-500/30'
-                    : 'border-zinc-700 focus:border-amber-500 focus:ring-amber-500/30'
-                }`}
+                className="w-full text-zinc-100 text-center text-2xl tracking-[0.6em] font-mono
+                  rounded-xl px-4 py-3 pr-11 transition-all input-glow placeholder-zinc-700"
+                style={erro
+                  ? {background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.5)',
+                    boxShadow: '0 0 0 3px rgba(248,113,113,0.12)'}
+                  : {}}
               />
               <button
                 type="button"
                 onClick={() => setVisivel(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{color: 'rgba(113,113,122,0.8)'}}
               >
                 {visivel ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -414,7 +425,7 @@ function TelaLogin({ onAutenticar }) {
 
             {/* Mensagem de erro */}
             {erro && (
-              <p className="text-xs text-red-400 mt-2 text-center animate-fadeSlide">
+              <p className="text-xs text-red-400 mt-2 text-center anim-up">
                 Senha incorreta. Tente novamente.
                 {tentativas >= 3 && ' Verifique com o administrador.'}
               </p>
@@ -423,15 +434,14 @@ function TelaLogin({ onAutenticar }) {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-lg bg-amber-500 hover:bg-amber-400 active:bg-amber-600
-                       text-zinc-900 font-semibold text-sm tracking-wide transition-colors
-                       shadow-lg shadow-amber-900/30"
-          >
+            className="w-full py-3 rounded-xl text-zinc-900 font-semibold text-sm tracking-wide transition-all btn-press"
+            style={{background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              boxShadow: '0 4px 20px rgba(245,158,11,0.35)'}}>
             Entrar
           </button>
         </form>
 
-        <p className="text-center text-xs text-zinc-700 mt-6">
+        <p className="text-center text-xs mt-6" style={{color: 'rgba(63,63,70,0.9)'}}>
           Uso interno · Lucro Presumido
         </p>
       </div>
