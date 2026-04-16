@@ -442,9 +442,12 @@ export default function App() {
   const [form, setForm]     = useState(estadoInicial)
   const [copied, setCopied] = useState(false)
 
-  if (!autenticado) {
-    return <TelaLogin onAutenticar={() => setAutenticado(true)} />
-  }
+  // ⚠️ Todos os hooks ANTES de qualquer return condicional (regra do React)
+  const resultadoAtual = useMemo(() => calcularAtual(form), [form])
+  const resultado2027  = useMemo(() => calcular2027(form),  [form])
+  const resultado      = form.regime === 'atual' ? resultadoAtual : resultado2027
+  const is2027         = form.regime === '2027'
+  const venda          = parseVal(form.valorVenda)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -455,11 +458,10 @@ export default function App() {
     setForm(estadoInicial)
   }
 
-  const resultadoAtual = useMemo(() => calcularAtual(form), [form])
-  const resultado2027  = useMemo(() => calcular2027(form),  [form])
-  const resultado      = form.regime === 'atual' ? resultadoAtual : resultado2027
-  const is2027         = form.regime === '2027'
-  const venda          = parseVal(form.valorVenda)
+  // Guard de autenticação — após todos os hooks
+  if (!autenticado) {
+    return <TelaLogin onAutenticar={() => setAutenticado(true)} />
+  }
 
   function handleExportar() {
     const r   = resultado
