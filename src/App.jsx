@@ -90,7 +90,9 @@ function calcularAtual(inputs) {
   // ICMS líquido a recolher (nunca negativo — saldo credor fica para próximo período)
   const icmsLiquido = Math.max(0, icmsDebito - icmsCredito)
 
-  const pisCofins     = venda * 0.0365
+  // PIS/COFINS — base exclui ICMS (RE 574.706 STF + Lei 14.592/2023)
+  const basePisCofins = venda - icmsDebito
+  const pisCofins     = basePisCofins * 0.0365
   const irpjCsll      = venda * 0.0228
   const totalImpostos = icmsLiquido + pisCofins + irpjCsll
   const custoTotal    = isCIF ? compra + frete : compra
@@ -99,7 +101,7 @@ function calcularAtual(inputs) {
   const margemLiquida = venda > 0 ? (lucroLiquido / venda) * 100 : 0
 
   return { baseICMS, aliqICMS, aliqICMSCompra, icmsDebito, icmsCredito, icmsLiquido,
-           pisCofins, irpjCsll, totalImpostos,
+           basePisCofins, pisCofins, irpjCsll, totalImpostos,
            custoTotal, lucroBruto, lucroLiquido, margemLiquida, isCIF, frete }
 }
 
@@ -111,19 +113,20 @@ function calcular2027(inputs) {
   const frete   = parseVal(valorFrete)
   const isCIF   = modalidadeFrete === 'CIF'
 
-  // CBS não-cumulativa — crédito da compra abatido da CBS da venda
-  const cbsBruta   = venda * 0.088
-  const cbsCredito = compra * 0.088
-  const cbsLiquida = Math.max(0, cbsBruta - cbsCredito)
-  const ibs        = venda * 0.001
-
-  // ICMS ainda vigente em 2027 com aproveitamento — base sempre valor de venda
+  // ICMS ainda vigente em 2027 com aproveitamento — calculado primeiro (usado na base da CBS)
   const baseICMS       = venda
   const aliqICMS       = getAliquotaICMS(estadoOrigem, estadoDestino)
   const icmsDebito     = baseICMS * aliqICMS
   const aliqICMSCompra = getAliquotaICMS(estadoFornecedor, estadoOrigem)
   const icmsCredito    = compra * aliqICMSCompra
   const icmsLiquido    = Math.max(0, icmsDebito - icmsCredito)
+
+  // CBS não-cumulativa — base exclui ICMS (LC 214/2025, art. 12)
+  const icmsValorCompra = compra * aliqICMSCompra
+  const cbsBruta        = (venda - icmsDebito) * 0.088
+  const cbsCredito      = (compra - icmsValorCompra) * 0.088
+  const cbsLiquida      = Math.max(0, cbsBruta - cbsCredito)
+  const ibs             = venda * 0.001
 
   const irpjCsll      = venda * 0.0228
   const pisCofins     = 0
@@ -837,7 +840,7 @@ export default function App() {
                   <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(245,158,11,0.04)'}}>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-amber-300">CBS Bruta</span>
-                      <Tooltip texto="CBS (Contribuição sobre Bens e Serviços) devida sobre o valor de venda. Alíquota estimada: 8,8%. Substitui o PIS/COFINS a partir de 2027." />
+                      <Tooltip texto="CBS (Contribuição sobre Bens e Serviços). Alíquota estimada: 8,8%. Base: valor de venda menos ICMS débito — ICMS excluído da base conforme LC 214/2025, art. 12." />
                       <span className="ml-1 text-xs font-mono text-amber-600">8,80%</span>
                     </div>
                     <span className="font-mono text-base font-semibold text-amber-200">{fmt(resultado2027.cbsBruta)}</span>
@@ -845,7 +848,7 @@ export default function App() {
                   <div className="px-4 py-3 flex items-center justify-between" style={{background: 'rgba(52,211,153,0.06)', borderTop: '1px solid rgba(52,211,153,0.12)'}}>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-emerald-400">CBS Crédito</span>
-                      <Tooltip texto="Sua revendedora aproveita o crédito de CBS pago pelo fornecedor na etapa anterior da cadeia. Apenas a diferença é recolhida." />
+                      <Tooltip texto="Crédito de CBS sobre o valor de compra menos o ICMS da nota de entrada. Base excluída de ICMS conforme LC 214/2025." />
                       <span className="ml-1 text-xs font-mono text-emerald-600">8,80%</span>
                     </div>
                     <span className="font-mono text-base font-semibold text-emerald-400">− {fmt(resultado2027.cbsCredito)}</span>
@@ -873,7 +876,7 @@ export default function App() {
                 nome="PIS + COFINS"
                 aliq="3,65%"
                 valor={resultado.pisCofins}
-                tooltip="PIS (0,65%) + COFINS (3%) no regime cumulativo. Aplicável a empresas no Lucro Presumido. Base de cálculo: valor de venda."
+                tooltip={`PIS (0,65%) + COFINS (3%) no regime cumulativo. Base: valor de venda menos ICMS débito (${fmt(resultado.basePisCofins)}). ICMS excluído conforme RE 574.706 STF e Lei 14.592/2023.`}
               />
             )}
 
