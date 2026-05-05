@@ -270,7 +270,7 @@ function ComparativoRegimes({ atual, r2027, venda }) {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+        <h2 className="font-display text-sm tracking-wide font-semibold uppercase flex items-center gap-2"
           style={{color: 'rgba(245,158,11,0.9)'}}>
           <TrendingUp size={15} />
           Comparativo 2026 vs 2027
@@ -616,7 +616,7 @@ export default function App() {
               <Calculator size={18} className="text-amber-400" />
             </div>
             <div>
-              <h1 className="gradient-text font-display text-lg sm:text-2xl tracking-widest leading-none uppercase">
+              <h1 className="gradient-text font-display text-lg sm:text-2xl tracking-tight sm:tracking-widest leading-none uppercase">
                 Calculadora de Impostos
               </h1>
               <p className="text-xs mt-0.5" style={{color: 'rgba(161,161,170,0.7)'}}>Revendedora de Minérios · Lucro Presumido</p>
@@ -666,7 +666,7 @@ export default function App() {
             ════════════════════════════════════════ */}
         <section className="space-y-5 anim-up">
           <div className="glass rounded-2xl p-5 space-y-4 card-lift" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+            <h2 className="font-display text-sm tracking-wide font-semibold uppercase flex items-center gap-2"
               style={{color: 'rgba(245,158,11,0.9)'}}>
               <ShoppingCart size={15} />
               Dados da Operação
@@ -730,7 +730,7 @@ export default function App() {
 
           {/* Estados */}
           <div className="glass rounded-2xl p-5 space-y-4 card-lift" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+            <h2 className="font-display text-sm tracking-wide font-semibold uppercase flex items-center gap-2"
               style={{color: 'rgba(245,158,11,0.9)'}}>
               <Truck size={15} />
               Origem & Destino
@@ -799,7 +799,7 @@ export default function App() {
 
           {/* Detalhamento dos impostos */}
           <div className="glass rounded-2xl p-5 space-y-3" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+            <h2 className="font-display text-sm tracking-wide font-semibold uppercase flex items-center gap-2"
               style={{color: 'rgba(245,158,11,0.9)'}}>
               <BarChart2 size={15} />
               Impostos Incidentes
@@ -902,7 +902,7 @@ export default function App() {
 
           {/* Resumo financeiro */}
           <div className="glass rounded-2xl p-5 space-y-3 anim-up-3" style={{border: '1px solid rgba(255,255,255,0.07)'}}>
-            <h2 className="font-display text-sm tracking-widest font-semibold uppercase flex items-center gap-2"
+            <h2 className="font-display text-sm tracking-wide font-semibold uppercase flex items-center gap-2"
               style={{color: 'rgba(245,158,11,0.9)'}}>
               <DollarSign size={15} />
               Resumo Financeiro
