@@ -1,7 +1,8 @@
 import sharp from './node_modules/sharp/lib/index.js'
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 
 const svg = readFileSync('./public/pwa-icon.svg')
+const bg  = { r: 17, g: 17, b: 24 }   // #111118
 
 const icons = [
   ['apple-touch-icon-180x180.png', 180],
@@ -13,17 +14,18 @@ const icons = [
 
 for (const [filename, size] of icons) {
   await sharp(svg)
+    .flatten({ background: bg })   // remove canal alpha — fundo sólido #111118
     .resize(size, size)
-    .png()
+    .png({ compressionLevel: 9 })
     .toFile(`./public/${filename}`)
-  console.log(`✔ ${filename} (${size}x${size})`)
+  console.log(`✔ ${filename} (${size}×${size})`)
 }
 
-// favicon.ico a partir do 64x64
-await sharp(svg).resize(32, 32).png().toFile('./public/favicon-32.png')
-import { createWriteStream } from 'fs'
-// copia o 32px como favicon.ico (browsers aceitam PNG renomeado como .ico)
-const ico = readFileSync('./public/favicon-32.png')
-import { writeFileSync } from 'fs'
+// favicon.ico
+const ico = await sharp(svg)
+  .flatten({ background: bg })
+  .resize(32, 32)
+  .png()
+  .toBuffer()
 writeFileSync('./public/favicon.ico', ico)
 console.log('✔ favicon.ico')
