@@ -385,9 +385,9 @@ const estadoInicial = {
   valorVenda:       '',
   valorFrete:       '',
   modalidadeFrete:  'CIF',
-  estadoFornecedor: 'MG',
-  estadoOrigem:     'SP',
-  estadoDestino:    'RJ',
+  estadoFornecedor: 'GO',
+  estadoOrigem:     'GO',
+  estadoDestino:    'GO',
   regime:           'atual',
 }
 
@@ -520,7 +520,6 @@ export default function App() {
   const [form, setForm]                     = useState(estadoInicial)
   const [copied, setCopied]                 = useState(false)
   const [fabAberto, setFabAberto]           = useState(false)
-  const [instrucaoFechar, setInstrucaoFechar] = useState(false)
 
   // ⚠️ Todos os hooks ANTES de qualquer return condicional (regra do React)
   const resultadoAtual = useMemo(() => calcularAtual(form), [form])
@@ -541,9 +540,8 @@ export default function App() {
 
   function handleFecharApp() {
     setFabAberto(false)
-    window.close()
-    // Se ainda estiver rodando após 400ms, window.close() falhou (iOS PWA)
-    setTimeout(() => setInstrucaoFechar(true), 400)
+    setAutenticado(false)
+    setForm(estadoInicial)
   }
 
   // Guard de autenticação — após todos os hooks
@@ -617,7 +615,7 @@ export default function App() {
     <div className="min-h-screen text-zinc-100 font-body" style={{background: '#111118'}}>
 
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-40 glass" style={{borderBottom: '1px solid rgba(245,158,11,0.15)'}}>
+      <header className="sticky top-0 z-40 glass" style={{borderBottom: '1px solid rgba(245,158,11,0.15)', paddingTop: 'env(safe-area-inset-top)'}}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
 
           {/* Logo + title */}
@@ -1012,35 +1010,6 @@ export default function App() {
         </p>
       </div>
 
-      {/* ── MODAL: instrução fechar app ── */}
-      {instrucaoFechar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          style={{background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)'}}>
-          <div className="glass rounded-2xl p-6 w-full max-w-xs space-y-4 anim-up"
-            style={{border: '1px solid rgba(255,255,255,0.1)'}}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.25)'}}>
-                <Power size={18} className="text-red-400" />
-              </div>
-              <h3 className="font-semibold text-zinc-100 text-base">Como fechar o app</h3>
-            </div>
-            <p className="text-sm leading-relaxed" style={{color: 'rgba(161,161,170,0.9)'}}>
-              <strong className="text-zinc-300">No iPhone:</strong> deslize de baixo para cima para ver os apps abertos e jogue este app para cima.
-            </p>
-            <p className="text-sm leading-relaxed" style={{color: 'rgba(161,161,170,0.9)'}}>
-              <strong className="text-zinc-300">No computador:</strong> feche a aba do navegador normalmente.
-            </p>
-            <button
-              onClick={() => setInstrucaoFechar(false)}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold btn-press"
-              style={{background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#111118'}}>
-              Entendido
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ── FAB flutuante ── */}
       <div className="fixed bottom-6 right-4 z-40 flex flex-col items-end gap-3">
 
@@ -1057,7 +1026,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium px-2 py-1 rounded-lg"
                 style={{background: 'rgba(0,0,0,0.6)', color: 'rgba(248,113,113,0.9)', backdropFilter: 'blur(8px)'}}>
-                Fechar app
+                Voltar ao login
               </span>
               <button
                 onClick={handleFecharApp}
