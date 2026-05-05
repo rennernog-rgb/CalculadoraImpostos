@@ -2,7 +2,8 @@ import { useState, useMemo, useRef } from 'react'
 import {
   Info, Trash2, Copy, TrendingUp, TrendingDown,
   Truck, AlertTriangle, DollarSign, BarChart2,
-  ShoppingCart, Package, CheckCheck, Lock, Eye, EyeOff, Calculator
+  ShoppingCart, Package, CheckCheck, Lock, Eye, EyeOff, Calculator,
+  X, Power, MoreVertical
 } from 'lucide-react'
 
 // ─── DADOS ESTÁTICOS ────────────────────────────────────────────────────────
@@ -515,9 +516,11 @@ function TelaLogin({ onAutenticar }) {
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [autenticado, setAutenticado] = useState(false)
-  const [form, setForm]     = useState(estadoInicial)
-  const [copied, setCopied] = useState(false)
+  const [autenticado, setAutenticado]       = useState(false)
+  const [form, setForm]                     = useState(estadoInicial)
+  const [copied, setCopied]                 = useState(false)
+  const [fabAberto, setFabAberto]           = useState(false)
+  const [instrucaoFechar, setInstrucaoFechar] = useState(false)
 
   // ⚠️ Todos os hooks ANTES de qualquer return condicional (regra do React)
   const resultadoAtual = useMemo(() => calcularAtual(form), [form])
@@ -533,6 +536,14 @@ export default function App() {
 
   function handleLimpar() {
     setForm(estadoInicial)
+    setFabAberto(false)
+  }
+
+  function handleFecharApp() {
+    setFabAberto(false)
+    window.close()
+    // Se ainda estiver rodando após 400ms, window.close() falhou (iOS PWA)
+    setTimeout(() => setInstrucaoFechar(true), 400)
   }
 
   // Guard de autenticação — após todos os hooks
@@ -1000,6 +1011,97 @@ export default function App() {
           Consulte um contador.
         </p>
       </div>
+
+      {/* ── MODAL: instrução fechar app ── */}
+      {instrucaoFechar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)'}}>
+          <div className="glass rounded-2xl p-6 w-full max-w-xs space-y-4 anim-up"
+            style={{border: '1px solid rgba(255,255,255,0.1)'}}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.25)'}}>
+                <Power size={18} className="text-red-400" />
+              </div>
+              <h3 className="font-semibold text-zinc-100 text-base">Como fechar o app</h3>
+            </div>
+            <p className="text-sm leading-relaxed" style={{color: 'rgba(161,161,170,0.9)'}}>
+              <strong className="text-zinc-300">No iPhone:</strong> deslize de baixo para cima para ver os apps abertos e jogue este app para cima.
+            </p>
+            <p className="text-sm leading-relaxed" style={{color: 'rgba(161,161,170,0.9)'}}>
+              <strong className="text-zinc-300">No computador:</strong> feche a aba do navegador normalmente.
+            </p>
+            <button
+              onClick={() => setInstrucaoFechar(false)}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold btn-press"
+              style={{background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#111118'}}>
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── FAB flutuante ── */}
+      <div className="fixed bottom-6 right-4 z-40 flex flex-col items-end gap-3">
+
+        {/* Overlay invisível para fechar ao clicar fora */}
+        {fabAberto && (
+          <div className="fixed inset-0 z-[-1]" onClick={() => setFabAberto(false)} />
+        )}
+
+        {/* Mini-menu de ações */}
+        {fabAberto && (
+          <div className="flex flex-col items-end gap-2 anim-up">
+
+            {/* Fechar app */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2 py-1 rounded-lg"
+                style={{background: 'rgba(0,0,0,0.6)', color: 'rgba(248,113,113,0.9)', backdropFilter: 'blur(8px)'}}>
+                Fechar app
+              </span>
+              <button
+                onClick={handleFecharApp}
+                className="w-11 h-11 rounded-full flex items-center justify-center btn-press transition-all"
+                style={{background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)'}}>
+                <Power size={18} className="text-red-400" />
+              </button>
+            </div>
+
+            {/* Limpar dados */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2 py-1 rounded-lg"
+                style={{background: 'rgba(0,0,0,0.6)', color: 'rgba(161,161,170,0.9)', backdropFilter: 'blur(8px)'}}>
+                Limpar dados
+              </span>
+              <button
+                onClick={handleLimpar}
+                className="w-11 h-11 rounded-full flex items-center justify-center btn-press transition-all"
+                style={{background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)'}}>
+                <Trash2 size={17} className="text-zinc-300" />
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* Botão FAB principal */}
+        <button
+          onClick={() => setFabAberto(v => !v)}
+          className="w-13 h-13 rounded-full flex items-center justify-center btn-press transition-all"
+          style={{
+            width: 52, height: 52,
+            background: fabAberto
+              ? 'rgba(255,255,255,0.1)'
+              : 'linear-gradient(135deg, #f59e0b, #d97706)',
+            border: fabAberto ? '1px solid rgba(255,255,255,0.15)' : 'none',
+            boxShadow: fabAberto ? 'none' : '0 4px 20px rgba(245,158,11,0.4)',
+          }}>
+          {fabAberto
+            ? <X size={20} className="text-zinc-300" />
+            : <MoreVertical size={20} className="text-zinc-900" />}
+        </button>
+      </div>
+
     </div>
   )
 }
